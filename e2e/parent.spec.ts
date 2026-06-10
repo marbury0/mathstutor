@@ -23,7 +23,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
 
     // 3. Verify that Year 5 curriculum topics are visible with 0% mastery
     await expect(page.getByText('Prime Numbers')).toBeVisible();
-    await expect(page.getByText('Multiplying Decimals')).toBeVisible();
+    await expect(page.getByText('Multiplying & Dividing by 10, 100, 1000')).toBeVisible();
     await expect(page.getByText('Angles')).toBeVisible();
 
     // Verify mastery starts at 0%
@@ -78,5 +78,103 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await expect(page.getByText('No sessions recorded yet.')).not.toBeVisible();
     await expect(page.getByText('1 pts')).toBeVisible();
     await expect(page.getByText('0 mins')).toBeVisible(); // 5 seconds rounds down to 0 minutes
+  });
+
+  test('should allow editing child profile name, age, and year group', async ({ page }) => {
+    // 1. Onboard student as Year 5
+    await page.goto('/');
+    await page.getByPlaceholder('Your name...').fill('Ethan');
+    await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: '9', exact: true }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    await page.getByRole('button', { name: 'I do okay! 👍' }).click();
+    await expect(page.getByRole('heading', { name: 'Welcome back, Ethan! 🌟' })).toBeVisible({ timeout: 15000 });
+
+    // 2. Navigate to Parent Dashboard
+    await page.goto('/parent');
+
+    // 3. Edit profile to change name to 'Ethan Progressed', age to 10 (Year 6)
+    await page.getByPlaceholder('Name...').fill('Ethan Progressed');
+    await page.selectOption('select:has-text("years old")', '10');
+    await page.selectOption('select:has-text("Year")', '6');
+    await page.getByRole('button', { name: 'Save Profile Changes' }).click();
+
+    // 4. Verify success message
+    await expect(page.getByText('Profile updated successfully! 🎉')).toBeVisible();
+
+    // 5. Verify the header updates
+    await expect(page.getByRole('heading', { name: 'Parent Dashboard: Ethan Progressed 📈' })).toBeVisible();
+
+    // 6. Navigate back to Home and verify dashboard shows Year 6 details
+    await page.getByRole('link', { name: 'Back to Tutor' }).click();
+    await expect(page.getByRole('heading', { name: 'Welcome back, Ethan Progressed! 🌟' })).toBeVisible();
+    await expect(page.getByText('Year 6 • Ready for your daily 20-minute math sprint?')).toBeVisible();
+  });
+
+  test('should allow editing child interests (hobbies/pets) and custom math topics', async ({ page }) => {
+    // 1. Onboard student as Year 5
+    await page.goto('/');
+    await page.getByPlaceholder('Your name...').fill('Chloe');
+    await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: '9', exact: true }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    
+    // Add initial hobby
+    await page.getByPlaceholder('e.g. Minecraft, Football...').fill('Painting');
+    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
+
+    // Add initial pet
+    await page.getByPlaceholder("Pet's name (e.g. Fluffy)").fill('Bella');
+    await page.selectOption('select', 'Dog');
+    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+
+    await page.getByRole('button', { name: 'I do okay! 👍' }).click();
+    await expect(page.getByRole('heading', { name: 'Welcome back, Chloe! 🌟' })).toBeVisible({ timeout: 15000 });
+
+    // 2. Navigate to Parent Dashboard
+    await page.goto('/parent');
+
+    // 3. Add a new hobby
+    await page.getByPlaceholder('e.g. Football, Coding...').fill('Tennis');
+    await page.getByRole('button', { name: 'Add Hobby' }).click();
+    await expect(page.getByText('Tennis')).toBeVisible();
+
+    // 4. Remove the old hobby ('Painting')
+    await page.locator('span:has-text("Painting")').getByRole('button', { name: '✕' }).click();
+    await expect(page.locator('span:has-text("Painting")')).not.toBeVisible();
+
+    // 5. Add a new pet
+    await page.getByPlaceholder("Pet's name (e.g. Fluffy)").fill('Goldie');
+    await page.selectOption('select:has-text("Dog")', 'Fish');
+    await page.getByRole('button', { name: 'Add Pet' }).click();
+    await expect(page.getByText('Goldie (Fish)')).toBeVisible();
+
+    // 6. Remove the old pet ('Bella')
+    await page.locator('span:has-text("Bella (Dog)")').getByRole('button', { name: '✕' }).click();
+    await expect(page.locator('span:has-text("Bella (Dog)")')).not.toBeVisible();
+
+    // Save profile changes
+    await page.getByRole('button', { name: 'Save Profile Changes' }).click();
+    await expect(page.getByText('Profile updated successfully! 🎉')).toBeVisible();
+
+    // 7. Add a custom math topic
+    await page.getByPlaceholder('e.g. Roman Numerals, Long Division...').fill('Custom Division');
+    await page.getByRole('button', { name: 'Add Topic' }).click();
+    await expect(page.getByText('Custom Division')).toBeVisible();
+
+    // 8. Delete a math topic
+    // Set up dialog handler to accept deletion
+    page.on('dialog', async (dialog) => {
+      expect(dialog.message()).toContain('Are you sure you want to remove "Custom Division"?');
+      await dialog.accept();
+    });
+
+    // Click trash icon next to 'Custom Division'
+    await page.locator('div:has-text("Custom Division")').getByRole('button', { name: '🗑️' }).click();
+    await expect(page.getByText('Custom Division')).not.toBeVisible();
   });
 });

@@ -4,6 +4,44 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
 /**
+ * Cleans LaTeX mathematics notation from text and replaces them with standard readable symbols.
+ */
+export function cleanMathText(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(/\\(approx|times|div|pm|mp|le|ge|ne|degree|circ|cdot|theta|pi|Delta|alpha|beta|gamma)/g, (match, p1) => {
+      switch (p1) {
+        case 'times': return '×';
+        case 'div': return '÷';
+        case 'approx': return '≈';
+        case 'pm': return '±';
+        case 'le': return '≤';
+        case 'ge': return '≥';
+        case 'ne': return '≠';
+        case 'cdot': return '·';
+        case 'theta': return 'θ';
+        case 'pi': return 'π';
+        case 'Delta': return 'Δ';
+        case 'alpha': return 'α';
+        case 'beta': return 'β';
+        case 'gamma': return 'γ';
+        case 'circ':
+        case 'degree': return '°';
+        default: return match;
+      }
+    })
+    .replace(/\^\\circ/g, '°')
+    .replace(/\^circ/g, '°')
+    .replace(/\^\\degree/g, '°')
+    .replace(/\^degree/g, '°')
+    .replace(/\\circ/g, '°')
+    .replace(/\^2/g, '²')
+    .replace(/\^3/g, '³')
+    .replace(/\{(\d+)\}/g, '$1')
+    .replace(/\$/g, ''); // Strip math mode dollar signs
+}
+
+/**
  * Validates the math in the generated question using a separate AI call (The Validator).
  * This ensures the answer and text actually match up.
  */
@@ -47,7 +85,7 @@ export async function generateQuestion(
       answer: "4",
       explanation: "Since 2 + 2 equals 4, the answer is 4.",
       reasoning: "2 + 2 = 4",
-      visualHint: "🍎🍎 + 🍎🍎 = 🍎🍎🍎🍎"
+      visualHint: "🍎🍎 + 🍎🍎 = ?"
     };
   }
 
@@ -60,15 +98,15 @@ export async function generateQuestion(
     Difficulty Level: ${profile.difficultyLevel}/10 (1 = very basic, 10 = challenging for this year group).
     
     Guidelines for Accuracy:
-    - For Algebra: Clearly define variables. If $b$ is the number of items, explain finding $b$ as "finding the number of items".
-    - For Word Problems: Keep scenarios logical and numbers age-appropriate.
+    - For Algebra: Clearly define variables. If b is the number of items, explain finding b as "finding the number of items" (do not use LaTeX $b$).
+    - For Word Problems: Keep scenarios logical and numbers age-appropriate. NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees, x or letters directly for variables).
     
     Return JSON:
     - reasoning: Internal calculation steps.
     - text: The word problem.
     - answer: The numeric answer.
     - explanation: How to solve it, using precise mathematical language.
-    - visualHint: A simple visual representation using emojis (e.g., 🍎🍎 + 🍎 = 🍎🍎🍎).
+    - visualHint: A simple visual representation of the problem setup using emojis to help the child visualize the objects and quantities (e.g. 🍎🍎 + 🍎 = ?). NEVER include the final answer, result, or completed equation. If there is a missing number, represent it with a question mark (?).
     - topic: Topic name.
   `;
 
@@ -78,7 +116,12 @@ export async function generateQuestion(
     const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
     const data = JSON.parse(jsonStr);
     data.answer = String(data.answer); // Force to string to prevent client-side .trim() crashes if model outputs a number
+    
     const questionData = data as QuestionData;
+    questionData.text = cleanMathText(questionData.text);
+    questionData.explanation = cleanMathText(questionData.explanation);
+    questionData.visualHint = cleanMathText(questionData.visualHint);
+    questionData.reasoning = cleanMathText(questionData.reasoning);
 
     // GUARDRAIL: Cross-validate the math before returning
     const isValid = await validateMath(questionData.text, questionData.answer);
@@ -104,9 +147,10 @@ export async function getAdaptiveHint(
   const prompt = `
     A child named ${profileName} answered "${wrongAnswer}" to: "${question}" (Correct: "${correctAnswer}").
     Provide a friendly hint (don't give the answer).
+    NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
   `;
   const result = await model.generateContent(prompt);
-  return result.response.text();
+  return cleanMathText(result.response.text());
 }
 
 /**
@@ -138,7 +182,11 @@ export async function diagnoseError(
 
   const result = await model.generateContent(prompt);
   const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
-  return JSON.parse(jsonStr);
+  const diagnosis = JSON.parse(jsonStr);
+  return {
+    misconception: cleanMathText(diagnosis.misconception),
+    advice: cleanMathText(diagnosis.advice)
+  };
 }
 
 export async function getAlternativeExplanation(
@@ -158,7 +206,8 @@ export async function getAlternativeExplanation(
     "${question}"
     
     Explain it in another way that is simple, fun, and extremely easy for a child to understand. Use analogies, visuals, or simple step-by-step guidance.
+    NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
   `;
   const result = await model.generateContent(prompt);
-  return result.response.text();
+  return cleanMathText(result.response.text());
 }

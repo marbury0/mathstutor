@@ -30,9 +30,14 @@ export async function createUser(data: {
     // Seed topics specifically for this user
     await seedTopics(user.id, data.yearGroup, data.startingDifficulty);
 
-    // Set active profile cookie
+    // Set active profile cookie (persisted for 30 days)
     const cookieStore = await cookies();
-    cookieStore.set('userId', user.id, { path: '/' });
+    cookieStore.set('userId', user.id, { 
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
   } catch (error) {
     console.error('Prisma error in createUser:', error);
     throw error;
@@ -68,7 +73,12 @@ export async function getAllUsers() {
 
 export async function switchUser(userId: string) {
   const cookieStore = await cookies();
-  cookieStore.set('userId', userId, { path: '/' });
+  cookieStore.set('userId', userId, { 
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production'
+  });
   revalidatePath('/');
 }
 
@@ -82,6 +92,94 @@ export async function clearActiveUser() {
   const cookieStore = await cookies();
   cookieStore.delete('userId');
   revalidatePath('/');
+}
+
+export async function updateUser(data: {
+  name: string;
+  age: number;
+  yearGroup: number;
+  hobbies?: string[];
+  pets?: { name: string; type: string }[];
+}) {
+  const user = await getUser();
+  if (!user) throw new Error("No user found");
+
+  const updateData: any = {
+    name: data.name,
+    age: data.age,
+    yearGroup: data.yearGroup,
+  };
+
+  if (data.hobbies !== undefined) {
+    updateData.hobbies = JSON.stringify(data.hobbies);
+  }
+  if (data.pets !== undefined) {
+    updateData.pets = JSON.stringify(data.pets);
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: updateData,
+  });
+
+  // Seed new topics for the new year group if they don't exist yet
+  await seedTopics(user.id, data.yearGroup, 3);
+
+  revalidatePath('/');
+  revalidatePath('/parent');
+}
+
+export async function addCustomTopic(name: string, startingDifficulty: number = 3) {
+  const user = await getUser();
+  if (!user) throw new Error("No user found");
+
+  const trimmedName = name.trim();
+  if (!trimmedName) throw new Error("Topic name cannot be empty");
+
+  await prisma.topic.upsert({
+    where: {
+      name_yearGroup_userId: {
+        name: trimmedName,
+        yearGroup: user.yearGroup,
+        userId: user.id
+      }
+    },
+    update: {},
+    create: {
+      name: trimmedName,
+      yearGroup: user.yearGroup,
+      userId: user.id,
+      difficultyLevel: startingDifficulty
+    }
+  });
+
+  revalidatePath('/');
+  revalidatePath('/parent');
+}
+
+export async function deleteTopic(topicId: string) {
+  const user = await getUser();
+  if (!user) throw new Error("No user found");
+
+  const topic = await prisma.topic.findUnique({
+    where: { id: topicId }
+  });
+
+  if (!topic || topic.userId !== user.id) {
+    throw new Error("Topic not found or unauthorized");
+  }
+
+  // Delete question history first to prevent foreign key errors
+  await prisma.questionHistory.deleteMany({
+    where: { topicId: topic.id }
+  });
+
+  await prisma.topic.delete({
+    where: { id: topicId }
+  });
+
+  revalidatePath('/');
+  revalidatePath('/parent');
 }
 
 export async function getTopics() {

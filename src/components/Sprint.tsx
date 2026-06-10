@@ -37,8 +37,11 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
   }, [isTestMode]);
   
   const questionStartTime = useRef<number>(Date.now());
+  const isFetching = useRef(false);
 
   const loadNextQuestion = useCallback(async () => {
+    if (isFetching.current) return;
+    isFetching.current = true;
     setIsLoading(true);
     setHint(null);
     setAttempts(0);
@@ -54,6 +57,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
       console.error(e);
     } finally {
       setIsLoading(false);
+      isFetching.current = false;
     }
   }, []);
 
@@ -184,9 +188,32 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
               {currentQuestion.topic}
             </div>
             
-            <div className="text-4xl py-4 text-slate-900">
-              {currentQuestion.visualHint}
-            </div>
+            {currentQuestion.visualHint && (() => {
+              const match = currentQuestion.visualHint.match(/^([^a-zA-Z\(\)]*)(.*)$/);
+              const emojis = match ? match[1].trim() : '';
+              const text = match ? match[2].trim() : '';
+
+              if (emojis) {
+                return (
+                  <div className="flex flex-col items-center justify-center gap-3 py-2">
+                    <div className="text-3xl sm:text-4xl tracking-wider select-none leading-normal">
+                      {emojis}
+                    </div>
+                    {text && (
+                      <div className="text-sm sm:text-base font-semibold text-slate-500 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 max-w-md mx-auto leading-relaxed shadow-sm">
+                        {text}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <div className="text-base sm:text-lg md:text-xl font-bold text-teal-800 bg-teal-50/40 px-6 py-3 rounded-2xl border border-teal-100/60 max-w-lg mx-auto leading-relaxed shadow-sm">
+                  {currentQuestion.visualHint}
+                </div>
+              );
+            })()}
 
             <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-relaxed">
               {currentQuestion.text}
