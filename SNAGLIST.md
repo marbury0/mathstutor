@@ -3,9 +3,9 @@
 Small fixes, UI polish, and technical "snags" that need immediate attention.
 
 ## UI/UX Polish
-- [ ] **Onboarding Contrast**: Ensure all text in the onboarding steps is consistent (some use `text-black`, others use `text-gray-700`).
+- [x] **Onboarding Contrast**: Ensure all text in the onboarding steps is consistent (some use `text-black`, others use `text-gray-700`).
 - [ ] **Mobile Grid**: Test the 3x2 grid of "Year Group" buttons on small screens (iPhone SE size) to ensure no overflow.
-- [ ] **Button States**: Add a "hover" scale effect to the "Next" buttons in onboarding to match the "Year Group" button feel.
+- [x] **Button States**: Add a "hover" scale effect to the "Next" buttons in onboarding to match the "Year Group" button feel.
 - [ ] **Sprint Loading**: The "🤔" emoji bounce animation is great, but adding a "Generating your personalized challenge..." text would manage expectations better.
 
 ## Technical Refinement

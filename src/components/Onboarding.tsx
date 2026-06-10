@@ -7,11 +7,12 @@ import { seedTopics } from '@/app/actions/seed';
 export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
-  const [yearGroup, setYearGroup] = useState(5);
+  const [age, setAge] = useState(9);
   const [hobbies, setHobbies] = useState<string[]>([]);
   const [currentHobby, setCurrentHobby] = useState('');
-  const [petNames, setPetNames] = useState<string[]>([]);
-  const [currentPet, setCurrentPet] = useState('');
+  const [pets, setPets] = useState<{ name: string; type: string }[]>([]);
+  const [currentPetName, setCurrentPetName] = useState('');
+  const [currentPetType, setCurrentPetType] = useState('Dog');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addHobby = () => {
@@ -22,18 +23,20 @@ export default function Onboarding() {
   };
 
   const addPet = () => {
-    if (currentPet.trim()) {
-      setPetNames([...petNames, currentPet.trim()]);
-      setCurrentPet('');
+    if (currentPetName.trim() && currentPetType.trim()) {
+      setPets([...pets, { name: currentPetName.trim(), type: currentPetType.trim() }]);
+      setCurrentPetName('');
     }
   };
 
-  const handleFinish = async () => {
-    console.log('handleFinish called');
+  const handleFinish = async (startingDifficulty: number) => {
+    console.log('handleFinish called with difficulty:', startingDifficulty);
     setIsSubmitting(true);
     try {
-      await seedTopics();
-      await createUser({ name, yearGroup, hobbies, petNames });
+      // Map Age to Year Group: Age 5 -> Year 1, Age 6 -> Year 2, Age 7 -> Year 3, Age 8 -> Year 4, Age 9 -> Year 5, Age 10+ -> Year 6
+      const yearGroup = Math.max(1, Math.min(6, age - 4));
+      await seedTopics(yearGroup, startingDifficulty);
+      await createUser({ name, age, yearGroup, hobbies, pets });
       console.log('handleFinish success');
     } catch (error) {
       console.error('Failed to save user:', error);
@@ -43,16 +46,16 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-2xl shadow-xl border-4 border-blue-400">
+    <div className="max-w-md mx-auto mt-20 p-8 bg-white/95 text-slate-900 rounded-3xl shadow-xl border-4 border-teal-300">
       {step === 1 && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-blue-600 text-center text-black">Hi there! 👋</h2>
-          <p className="text-xl text-gray-700 text-center text-black">I'm your new Maths Tutor. What's your name?</p>
+          <h2 className="text-3xl font-bold text-teal-800 text-center">Hi there! 👋</h2>
+          <p className="text-xl text-slate-700 text-center">I'm your new Maths Tutor. What's your name?</p>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-4 text-xl border-2 border-blue-200 rounded-xl focus:border-blue-500 outline-none text-black bg-white"
+            className="w-full p-4 text-xl border-2 border-teal-200 rounded-xl focus:border-teal-400 outline-none text-slate-900 bg-white"
             placeholder="Your name..."
             autoFocus
           />
@@ -64,7 +67,7 @@ export default function Onboarding() {
                 alert('Please type your name first! 😊');
               }
             }}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-xl text-xl transition-colors cursor-pointer"
+            className="w-full bg-teal-500 hover:bg-teal-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-xl transition-all cursor-pointer shadow-md"
           >
             Next! 🚀
           </button>
@@ -73,33 +76,33 @@ export default function Onboarding() {
 
       {step === 2 && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-orange-600 text-center text-black">Cool name, {name}! 🎓</h2>
-          <p className="text-xl text-gray-700 text-center text-black">Which year are you in at school?</p>
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3, 4, 5, 6].map((year) => (
+          <h2 className="text-3xl font-bold text-orange-700 text-center">Cool name, {name}! 🎓</h2>
+          <p className="text-xl text-slate-700 text-center">How old are you?</p>
+          <div className="grid grid-cols-4 gap-2">
+            {[5, 6, 7, 8, 9, 10, 11, 12].map((a) => (
               <button
-                key={year}
-                onClick={() => setYearGroup(year)}
+                key={a}
+                onClick={() => setAge(a)}
                 className={`p-4 text-xl font-bold rounded-xl border-2 transition-all ${
-                  yearGroup === year
+                  age === a
                     ? 'bg-orange-500 text-white border-orange-600 scale-105 shadow-md'
-                    : 'bg-white text-gray-600 border-orange-100 hover:border-orange-300'
+                    : 'bg-white text-slate-700 border-orange-100 hover:border-orange-300 hover:scale-[1.02]'
                 }`}
               >
-                Year {year}
+                {a === 12 ? '12+' : a}
               </button>
             ))}
           </div>
           <div className="flex gap-4">
             <button
               onClick={() => setStep(1)}
-              className="flex-1 bg-gray-200 text-gray-700 font-bold py-4 rounded-xl text-lg cursor-pointer"
+              className="flex-1 bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
             >
               Back
             </button>
             <button
               onClick={() => setStep(3)}
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl text-lg transition-colors cursor-pointer"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-lg transition-all cursor-pointer shadow-md"
             >
               Next! ➡️
             </button>
@@ -109,27 +112,27 @@ export default function Onboarding() {
 
       {step === 3 && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-purple-600 text-center text-black">Awesome! 🌟</h2>
-          <p className="text-xl text-gray-700 text-center text-black">What do you love doing? (Hobbies, games...)</p>
+          <h2 className="text-3xl font-bold text-purple-700 text-center">Awesome! 🌟</h2>
+          <p className="text-xl text-slate-700 text-center">What do you love doing? (Hobbies, games...)</p>
           <div className="flex gap-2">
             <input
               type="text"
               value={currentHobby}
               onChange={(e) => setCurrentHobby(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addHobby()}
-              className="flex-1 p-4 text-lg border-2 border-purple-200 rounded-xl focus:border-purple-500 outline-none text-black bg-white"
+              className="flex-1 p-4 text-lg border-2 border-purple-200 rounded-xl focus:border-purple-500 outline-none text-slate-900 bg-white"
               placeholder="e.g. Minecraft, Football..."
             />
             <button
               onClick={addHobby}
-              className="bg-purple-500 text-white px-6 rounded-xl font-bold cursor-pointer"
+              className="bg-purple-500 hover:bg-purple-600 text-white px-6 rounded-xl font-bold cursor-pointer transition-colors"
             >
               Add
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
             {hobbies.map((h, i) => (
-              <span key={i} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
+              <span key={i} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full font-bold">
                 {h}
               </span>
             ))}
@@ -137,13 +140,13 @@ export default function Onboarding() {
           <div className="flex gap-4">
             <button
               onClick={() => setStep(2)}
-              className="flex-1 bg-gray-200 text-gray-700 font-bold py-4 rounded-xl text-lg cursor-pointer"
+              className="flex-1 bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
             >
               Back
             </button>
             <button
               onClick={() => setStep(4)}
-              className="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 rounded-xl text-lg transition-colors cursor-pointer"
+              className="flex-1 bg-purple-500 hover:bg-purple-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-lg transition-all cursor-pointer shadow-md"
             >
               Almost done! ➡️
             </button>
@@ -153,46 +156,96 @@ export default function Onboarding() {
 
       {step === 4 && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-green-600 text-center text-black">One last thing! 🐾</h2>
-          <p className="text-xl text-gray-700 text-center text-black">Do you have any pets? What are their names?</p>
-          <div className="flex gap-2">
+          <h2 className="text-3xl font-bold text-green-700 text-center">One last thing! 🐾</h2>
+          <p className="text-xl text-slate-700 text-center">Do you have any pets? What are they?</p>
+          <div className="space-y-3">
             <input
               type="text"
-              value={currentPet}
-              onChange={(e) => setCurrentPet(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addPet()}
-              className="flex-1 p-4 text-lg border-2 border-green-200 rounded-xl focus:border-green-500 outline-none text-black bg-white"
-              placeholder="e.g. Fluffy, Rover..."
+              value={currentPetName}
+              onChange={(e) => setCurrentPetName(e.target.value)}
+              className="w-full p-4 text-lg border-2 border-green-200 rounded-xl focus:border-green-500 outline-none text-slate-900 bg-white"
+              placeholder="Pet's name (e.g. Fluffy)"
             />
-            <button
-              onClick={addPet}
-              className="bg-green-500 text-white px-6 rounded-xl font-bold cursor-pointer"
-            >
-              Add
-            </button>
+            <div className="flex gap-2">
+              <select
+                value={currentPetType}
+                onChange={(e) => setCurrentPetType(e.target.value)}
+                className="flex-1 p-4 text-lg border-2 border-green-200 rounded-xl focus:border-green-500 outline-none text-slate-900 bg-white appearance-none"
+              >
+                {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse'].map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              <button
+                onClick={addPet}
+                className="bg-green-500 hover:bg-green-600 text-white px-8 rounded-xl font-bold cursor-pointer transition-colors"
+              >
+                Add
+              </button>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {petNames.map((p, i) => (
-              <span key={i} className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
-                {p}
+            {pets.map((p, i) => (
+              <span key={i} className="bg-green-100 text-green-800 px-3 py-1 rounded-full font-bold">
+                {p.name} ({p.type})
               </span>
             ))}
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 pt-4">
             <button
               onClick={() => setStep(3)}
-              className="flex-1 bg-gray-200 text-gray-700 font-bold py-4 rounded-xl text-lg cursor-pointer"
+              className="flex-1 bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
             >
               Back
             </button>
             <button
-              onClick={handleFinish}
-              disabled={isSubmitting}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl text-lg transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+              onClick={() => setStep(5)}
+              className="flex-1 bg-green-500 hover:bg-green-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-lg transition-all cursor-pointer shadow-md"
             >
-              {isSubmitting ? 'Saving...' : "Let's start! ✨"}
+              Next! ➡️
             </button>
           </div>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="space-y-6">
+          <h2 className="text-3xl font-bold text-red-600 text-center">Ready to learn! 🎒</h2>
+          <p className="text-xl text-slate-700 text-center font-medium">How do you feel about maths?</p>
+          
+          {isSubmitting ? (
+            <div className="flex flex-col items-center py-8 space-y-4">
+              <div className="animate-bounce text-5xl">🤔</div>
+              <p className="font-bold text-teal-700 animate-pulse text-lg">Setting up your maths dashboard...</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[
+                { label: "I need a bit of help! 🆘", diff: 1, color: "border-red-200 hover:border-red-500 text-red-700 hover:bg-red-50" },
+                { label: "I do okay! 👍", diff: 3, color: "border-blue-200 hover:border-blue-500 text-blue-700 hover:bg-blue-50" },
+                { label: "I'm a maths wizard! 🧙‍♂️", diff: 5, color: "border-green-200 hover:border-green-600 text-green-800 hover:bg-green-50" }
+              ].map(opt => (
+                <button 
+                  key={opt.diff} 
+                  onClick={() => handleFinish(opt.diff)}
+                  className={`w-full p-4 text-lg font-bold rounded-xl border-2 transition-all bg-white text-left ${opt.color} hover:scale-[1.02] active:scale-98 cursor-pointer shadow-sm`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!isSubmitting && (
+            <div className="flex gap-4 pt-4">
+              <button
+                onClick={() => setStep(4)}
+                className="w-full bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
+              >
+                Back
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

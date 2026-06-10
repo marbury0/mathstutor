@@ -9,11 +9,12 @@ interface Question {
   answer: string;
   explanation: string;
   topic: string;
-  validationError?: boolean;
+  visualHint: string;
 }
 
 export default function Sprint({ onFinish }: { onFinish: (score: number) => void }) {
   const [timeLeft, setTimeLeft] = useState(1200);
+  const [isPaused, setIsPaused] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
   const [score, setScore] = useState(0);
@@ -22,9 +23,20 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
   const [hint, setHint] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [showFullExplanation, setShowFullExplanation] = useState(false);
+
+  const initialTime = useRef(1200);
+
+  useEffect(() => {
+    const isTestMode = typeof window !== 'undefined' && 
+      (window.location.search.includes('test=true') || sessionStorage.getItem('test_mode') === 'true');
+    if (isTestMode) {
+      console.log('Test override detected: Setting sprint duration to 5 seconds.');
+      initialTime.current = 5;
+      setTimeLeft(5);
+    }
+  }, []);
   
   const questionStartTime = useRef<number>(Date.now());
-  const sprintStartTime = useRef<number>(Date.now());
 
   const loadNextQuestion = useCallback(async () => {
     setIsLoading(true);
@@ -33,8 +45,7 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
     setShowFullExplanation(false);
     setUserAnswer('');
     try {
-      // Retry logic for internal AI validation
-      let q = await fetchNextQuestion();
+      const q = await fetchNextQuestion();
       setCurrentQuestion(q);
       questionStartTime.current = Date.now();
     } catch (e) {
@@ -49,7 +60,8 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
   }, [loadNextQuestion]);
 
   useEffect(() => {
-    if (timeLeft <= 0 && !isFinished) {
+    if (isPaused || isFinished) return;
+    if (timeLeft <= 0) {
       handleFinalFinish();
       return;
     }
@@ -59,22 +71,20 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isFinished]);
+  }, [timeLeft, isFinished, isPaused]);
 
   const handleFinalFinish = async () => {
     setIsFinished(true);
-    const duration = Math.floor((Date.now() - sprintStartTime.current) / 1000);
+    const duration = Math.max(0, initialTime.current - timeLeft);
     await finishSession(score, duration);
     onFinish(score);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentQuestion || isLoading) return;
+    if (!currentQuestion || isLoading || isPaused) return;
 
     const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
-
-    // Normalize answers for basic validation (e.g., removing whitespace)
     const normalizedUser = userAnswer.trim();
     const normalizedCorrect = currentQuestion.answer.trim();
 
@@ -92,7 +102,7 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
         setHint(hintText);
         setIsLoading(false);
       } else {
-        await logQuestionResult(currentQuestion.topic, false, timeTaken);
+        await logQuestionResult(currentQuestion.topic, false, timeTaken, normalizedUser, normalizedCorrect);
         setShowFullExplanation(true);
       }
     }
@@ -103,12 +113,12 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
 
   if (isFinished) {
     return (
-      <div className="text-center space-y-6 p-8 bg-white rounded-3xl shadow-2xl border-4 border-green-500">
-        <h2 className="text-4xl font-bold text-green-600 text-black">Time's Up! 🏁</h2>
-        <p className="text-2xl text-gray-700 text-black">You scored <span className="font-bold text-blue-600">{score}</span> points!</p>
+      <div className="text-center space-y-6 p-8 bg-white text-slate-900 rounded-3xl shadow-2xl border-4 border-green-500">
+        <h2 className="text-4xl font-bold text-green-700">Time's Up! 🏁</h2>
+        <p className="text-2xl text-slate-800">You scored <span className="font-bold text-blue-700">{score}</span> points!</p>
         <button
           onClick={() => window.location.reload()}
-          className="bg-green-500 text-white px-8 py-4 rounded-2xl font-bold text-xl cursor-pointer"
+          className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-2xl font-bold text-xl cursor-pointer"
         >
           Back to Dashboard
         </button>
@@ -118,44 +128,69 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border-2 border-blue-100">
-        <div className="text-2xl font-bold text-blue-600">
-          ⏱️ {minutes}:{seconds.toString().padStart(2, '0')}
+      <div className="flex justify-between items-center bg-white/95 text-slate-900 p-4 rounded-2xl shadow-sm border-2 border-teal-100">
+        <div className="flex items-center gap-4">
+          <div id="sprint-timer" className="text-2xl font-bold text-teal-800">
+            ⏱️ {minutes}:{seconds.toString().padStart(2, '0')}
+          </div>
+          <button
+            onClick={() => setIsPaused(!isPaused)}
+            className="px-4 py-2 bg-teal-100 hover:bg-teal-200 text-teal-800 rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
+          >
+            {isPaused ? '▶️ Resume' : '⏸️ Pause'}
+          </button>
         </div>
-        <div className="text-2xl font-bold text-orange-500">
+        <div className="text-2xl font-bold text-orange-600">
           ⭐ Score: {score}
         </div>
       </div>
 
-      <div className="bg-white p-12 rounded-3xl shadow-xl border-4 border-blue-400 text-center space-y-8 relative overflow-hidden">
-        {isLoading && (
+      <div className="bg-white/95 text-slate-900 p-12 rounded-3xl shadow-xl border-4 border-teal-300 text-center space-y-8 relative overflow-hidden">
+        {isLoading && !isPaused && (
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
             <div className="animate-bounce text-4xl">🤔</div>
+            <p className="absolute bottom-10 font-bold text-teal-700 animate-pulse">Generating your personalized challenge...</p>
           </div>
         )}
 
-        {currentQuestion && (
+        {isPaused ? (
+          <div className="py-12 space-y-6">
+            <h3 className="text-3xl font-extrabold text-teal-800">Sprint Paused! ⏸️</h3>
+            <p className="text-xl text-slate-600">Take a quick breath, relax your mind, and resume when you are ready to learn.</p>
+            <button
+              onClick={() => setIsPaused(false)}
+              className="bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-4 px-8 rounded-2xl text-xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer"
+            >
+              Resume Sprint ▶️
+            </button>
+          </div>
+        ) : currentQuestion && (
           <>
-            <div className="text-sm font-bold text-blue-400 uppercase tracking-widest">
+            <div className="text-sm font-extrabold text-teal-700 uppercase tracking-widest">
               {currentQuestion.topic}
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 leading-relaxed text-black">
+            
+            <div className="text-4xl py-4 text-slate-900">
+              {currentQuestion.visualHint}
+            </div>
+
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-relaxed">
               {currentQuestion.text}
             </h2>
             
             {hint && !showFullExplanation && (
-              <div className="bg-yellow-50 p-4 rounded-xl border-2 border-yellow-200 text-yellow-800 italic animate-in fade-in slide-in-from-top-4">
+              <div className="bg-yellow-50 p-4 rounded-xl border-2 border-yellow-300 text-yellow-950 italic font-semibold animate-in fade-in slide-in-from-top-4">
                 💡 Hint: {hint}
               </div>
             )}
 
             {showFullExplanation && (
-              <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200 text-left space-y-4 animate-in zoom-in-95">
-                <p className="font-bold text-blue-800">Don't worry! Here's how to do it:</p>
-                <p className="text-gray-700">{currentQuestion.explanation}</p>
+              <div className="bg-teal-50/50 p-6 rounded-xl border-2 border-teal-100 text-left space-y-4 animate-in zoom-in-95">
+                <p className="font-bold text-teal-900">Don't worry! Here's how to do it:</p>
+                <p className="text-slate-800">{currentQuestion.explanation}</p>
                 <button
                   onClick={loadNextQuestion}
-                  className="w-full bg-blue-500 text-white font-bold py-2 rounded-lg cursor-pointer"
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-2 rounded-lg cursor-pointer"
                 >
                   Got it! Next question ➡️
                 </button>
@@ -168,14 +203,14 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
                   type="text"
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  className="w-full p-3 text-xl md:text-2xl text-center border-4 border-blue-100 rounded-2xl focus:border-blue-500 outline-none transition-colors text-black bg-white"
+                  className="w-full p-3 text-xl md:text-2xl text-center border-4 border-teal-100 rounded-2xl focus:border-teal-400 outline-none transition-colors text-slate-900 bg-white"
                   placeholder="Type your answer..."
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-2xl text-xl shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-3 rounded-2xl text-xl shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {attempts > 0 ? "Try Again! 🔄" : "Submit 🚀"}
                 </button>

@@ -2,13 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0] - 2026-06-09
+## [1.1.0] - 2026-06-09
 
 ### Added
-- **AI-Powered Question Generation**: Integrated Gemini to generate personalized math word problems based on child's name, hobbies, and pets.
-- **Adaptive Hint System**: AI-generated scaffolding hints for incorrect answers to guide the child without giving away the answer.
-- **Spaced Repetition System (SRS)**: Basic logic to track mastery and schedule topic reviews.
-- **Sprint Mode**: A 20-minute timed session for focused math practice with scoring and streak tracking.
-- **User Profiles**: Onboarding flow to collect name, hobbies, and pet names for personalization.
-- **Progress Tracking**: Basic database schema for sessions, topic mastery, and question history.
-- **Playful UI**: Colorful, kid-friendly interface using Tailwind CSS and Next.js.
+- **Gemini 3.5 Flash Integration**: Upgraded to the latest 2026 Gemini models for faster and more accurate tutoring.
+- **Curriculum-Specific Seeding**: Topics are now dynamically seeded based on the UK National Curriculum for the selected Year Group (1-6).
+- **Adaptive Difficulty Scaling**: Individual topic difficulty (1-10) now scales up after consecutive correct answers and drops immediately on mistakes.
+- **Error Misconception Diagnosis**: AI now analyzes wrong answers to identify specific misconceptions (e.g., place value confusion) and provide targeted advice.
+- **Visual Hints**: AI-generated emoji-based visual aids are now included with every question to help children visualize the math.
+- **Avatar Support**: Added database support for companion avatars.
+- **Automated Quality Auditing**: New testing suite where a "Lead Teacher" AI audits generated questions for age-appropriateness and curriculum alignment.
+
+### Fixed
+- Fixed 404 errors by standardizing on the 2026 stable model suite.
+- Hardened math validation to prevent conceptual errors in complex explanations.
+
+## [1.0.0] - 2026-06-09
+...

@@ -2,8 +2,11 @@
 CREATE TABLE "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
+    "age" INTEGER NOT NULL DEFAULT 9,
+    "yearGroup" INTEGER NOT NULL DEFAULT 5,
+    "avatar" TEXT NOT NULL DEFAULT '🐣',
     "hobbies" TEXT,
-    "petNames" TEXT,
+    "pets" TEXT,
     "currentStreak" INTEGER NOT NULL DEFAULT 0,
     "lastSprintDate" DATETIME
 );
@@ -12,7 +15,9 @@ CREATE TABLE "User" (
 CREATE TABLE "Topic" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
+    "yearGroup" INTEGER NOT NULL DEFAULT 5,
     "masteryLevel" REAL NOT NULL DEFAULT 0.0,
+    "difficultyLevel" INTEGER NOT NULL DEFAULT 3,
     "nextReviewDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -32,9 +37,11 @@ CREATE TABLE "QuestionHistory" (
     "topicId" TEXT NOT NULL,
     "isCorrect" BOOLEAN NOT NULL,
     "timeTaken" INTEGER NOT NULL,
+    "misconception" TEXT,
+    "advice" TEXT,
     "answeredAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "QuestionHistory_topicId_fkey" FOREIGN KEY ("topicId") REFERENCES "Topic" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Topic_name_key" ON "Topic"("name");
+CREATE UNIQUE INDEX "Topic_name_yearGroup_key" ON "Topic"("name", "yearGroup");

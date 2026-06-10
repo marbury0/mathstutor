@@ -1,17 +1,19 @@
 # Backlog
 
 ## High Priority
-- [ ] **Curriculum Flexibility**: Allow parents/users to select the UK School Year (Year 1 to Year 6) to adjust difficulty.
-- [ ] **Adaptive Difficulty Scaling**: Implement logic to increase/decrease question complexity within a year group based on performance.
-- [ ] **Error Type Analysis**: Use AI to diagnose specific mathematical misconceptions (e.g., place value, operation choice).
+- [x] **Curriculum Flexibility**: Year-group specific topic seeding (Year 1 to Year 6).
+- [x] **Adaptive Difficulty Scaling**: 1-10 difficulty leveling within topics based on streaks.
+- [x] **Error Type Analysis**: AI-driven misconception diagnosis and advice.
+- [ ] **Technical Hardening**: User-session isolation and answer normalization for currencies/decimals.
 
 ## Medium Priority
-- [ ] **Avatar System**: Basic character selection and growth mechanics.
-- [ ] **Visual Explanations**: Integrate simple visual aids or diagrams in the AI explanations.
-- [ ] **Parent Dashboard**: Detailed view of progress, streaks, and areas for improvement.
-- [ ] **Sound Effects & Haptics**: Add auditory feedback for success and encouragement.
+- [ ] **Avatar System (UI)**: Character selection screen and evolution animations.
+- [x] **Visual Explanations**: Emoji-based visual hints in questions.
+- [ ] **Parent Dashboard**: Detailed view of diagnosed misconceptions and progress.
+- [ ] **Sound Effects & Haptics**: Auditory feedback for success.
 
-## Low Priority
-- [ ] **Voice Support**: Text-to-speech for reading questions to younger children.
-- [ ] **Theme Packs**: Additional UI themes (Space, Jungle, Underwater).
-- [ ] **Multiplayer Mode**: Basic asynchronous "math races" with friends.
+## Done
+- [x] AI Mathematical Validation Guardrail.
+- [x] Spaced Repetition Logic.
+- [x] Gemini 3.5 Flash Integration.
+- [x] Automated AI Quality Auditing Suite.

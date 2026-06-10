@@ -1,6 +1,10 @@
-'use server';
+import { PrismaClient } from '@prisma/client';
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
-import prisma from '@/lib/prisma';
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL || 'file:./dev.db'
+});
+const prisma = new PrismaClient({ adapter } as any);
 
 const CURRICULUM: Record<number, string[]> = {
   1: ["Number Bonds to 10", "Counting to 100", "Basic Addition (within 20)", "Basic Subtraction (within 20)", "2D Shapes", "Days of the Week"],
@@ -11,27 +15,33 @@ const CURRICULUM: Record<number, string[]> = {
   6: ["Algebra", "Ratio and Proportion", "Percentages", "Order of Operations (BODMAS)", "Pie Charts", "Coordinates in four quadrants"]
 };
 
-export async function seedTopics(yearGroup: number, startingDifficulty: number = 3) {
-  console.log(`Seeding topics for Year ${yearGroup} with starting difficulty ${startingDifficulty}...`);
-  const topics = CURRICULUM[yearGroup] || CURRICULUM[5];
-  
-  try {
+async function main() {
+  console.log('Start seeding topics...');
+  for (const [yearGroupStr, topics] of Object.entries(CURRICULUM)) {
+    const yearGroup = parseInt(yearGroupStr, 10);
     for (const name of topics) {
       await prisma.topic.upsert({
-        where: { 
-          name_yearGroup: { name, yearGroup } 
+        where: {
+          name_yearGroup: { name, yearGroup }
         },
         update: {},
-        create: { 
-          name, 
+        create: {
+          name,
           yearGroup,
-          difficultyLevel: startingDifficulty
-        },
+          difficultyLevel: 3
+        }
       });
     }
-    console.log('Seeding complete.');
-  } catch (error) {
-    console.error('Error seeding topics:', error);
-    throw error;
   }
+  console.log('Seeding finished.');
 }
+
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

@@ -5,15 +5,16 @@ import { revalidatePath } from 'next/cache';
 
 import { redirect } from 'next/navigation';
 
-export async function createUser(data: { name: string; yearGroup: number; hobbies: string[]; petNames: string[] }) {
+export async function createUser(data: { name: string; age: number; yearGroup: number; hobbies: string[]; pets: { name: string, type: string }[] }) {
   console.log('Creating user with data:', data);
   try {
     const user = await prisma.user.create({
       data: {
         name: data.name,
+        age: data.age,
         yearGroup: data.yearGroup,
         hobbies: JSON.stringify(data.hobbies),
-        petNames: JSON.stringify(data.petNames),
+        pets: JSON.stringify(data.pets),
       },
     });
     console.log('User created successfully:', user.id);

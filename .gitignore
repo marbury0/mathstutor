@@ -45,3 +45,11 @@ next-env.d.ts
 # sqlite
 *.db
 *.db-journal
+
+# local env files
+.env
+
+# playwright reports and test results
+/playwright-report/
+/test-results/
+

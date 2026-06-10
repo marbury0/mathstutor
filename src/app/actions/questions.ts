@@ -8,12 +8,13 @@ export async function fetchNextQuestion() {
   if (!user) throw new Error("No user found");
 
   const hobbies = user.hobbies ? JSON.parse(user.hobbies) : [];
-  const petNames = user.petNames ? JSON.parse(user.petNames) : [];
+  const pets = user.pets ? JSON.parse(user.pets) : [];
 
   // SRS Logic: Find topics due for review
   const now = new Date();
   let dueTopics = await prisma.topic.findMany({
     where: {
+      yearGroup: user.yearGroup,
       nextReviewDate: {
         lte: now
       }
@@ -26,6 +27,7 @@ export async function fetchNextQuestion() {
   // If no topics are strictly due, just pick the ones with lowest mastery
   if (dueTopics.length === 0) {
     dueTopics = await prisma.topic.findMany({
+      where: { yearGroup: user.yearGroup },
       orderBy: {
         masteryLevel: 'asc'
       },
@@ -37,9 +39,11 @@ export async function fetchNextQuestion() {
 
   return await generateQuestion(selectedTopic.name, {
     name: user.name,
+    age: user.age,
     yearGroup: user.yearGroup,
     hobbies,
-    petNames
+    pets,
+    difficultyLevel: selectedTopic.difficultyLevel
   });
 }
 

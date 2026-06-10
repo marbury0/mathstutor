@@ -9,9 +9,11 @@ datasource db {
 model User {
   id             String    @id @default(cuid())
   name           String
+  age            Int       @default(9)
   yearGroup      Int       @default(5)
+  avatar         String    @default("🐣") // Emoji or ID
   hobbies        String?
-  petNames       String?
+  pets           String?
   currentStreak  Int       @default(0)
   lastSprintDate DateTime?
   sessions       Session[]
@@ -19,10 +21,14 @@ model User {
 
 model Topic {
   id              String            @id @default(cuid())
-  name            String            @unique
+  name            String
+  yearGroup       Int               @default(5)
   masteryLevel    Float             @default(0.0)
+  difficultyLevel Int               @default(3)
   nextReviewDate  DateTime          @default(now())
   questionHistory QuestionHistory[]
+
+  @@unique([name, yearGroup])
 }
 
 model Session {
@@ -35,10 +41,12 @@ model Session {
 }
 
 model QuestionHistory {
-  id         String   @id @default(cuid())
-  topicId    String
-  isCorrect  Boolean
-  timeTaken  Int
-  answeredAt DateTime @default(now())
-  topic      Topic    @relation(fields: [topicId], references: [id])
+  id            String   @id @default(cuid())
+  topicId       String
+  isCorrect     Boolean
+  timeTaken     Int
+  misconception String?  // Stores diagnosed error type
+  advice        String?  // Advice for that specific error
+  answeredAt    DateTime @default(now())
+  topic         Topic    @relation(fields: [topicId], references: [id])
 }
