@@ -17,18 +17,21 @@ model User {
   currentStreak  Int       @default(0)
   lastSprintDate DateTime?
   sessions       Session[]
+  topics         Topic[]
 }
 
 model Topic {
   id              String            @id @default(cuid())
+  userId          String
   name            String
   yearGroup       Int               @default(5)
   masteryLevel    Float             @default(0.0)
   difficultyLevel Int               @default(3)
   nextReviewDate  DateTime          @default(now())
   questionHistory QuestionHistory[]
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([name, yearGroup])
+  @@unique([name, yearGroup, userId])
 }
 
 model Session {

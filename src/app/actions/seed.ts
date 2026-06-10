@@ -11,20 +11,21 @@ const CURRICULUM: Record<number, string[]> = {
   6: ["Algebra", "Ratio and Proportion", "Percentages", "Order of Operations (BODMAS)", "Pie Charts", "Coordinates in four quadrants"]
 };
 
-export async function seedTopics(yearGroup: number, startingDifficulty: number = 3) {
-  console.log(`Seeding topics for Year ${yearGroup} with starting difficulty ${startingDifficulty}...`);
+export async function seedTopics(userId: string, yearGroup: number, startingDifficulty: number = 3) {
+  console.log(`Seeding topics for User ${userId}, Year ${yearGroup} with starting difficulty ${startingDifficulty}...`);
   const topics = CURRICULUM[yearGroup] || CURRICULUM[5];
   
   try {
     for (const name of topics) {
       await prisma.topic.upsert({
         where: { 
-          name_yearGroup: { name, yearGroup } 
+          name_yearGroup_userId: { name, yearGroup, userId } 
         },
         update: {},
         create: { 
           name, 
           yearGroup,
+          userId,
           difficultyLevel: startingDifficulty
         },
       });

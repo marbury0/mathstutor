@@ -12,7 +12,7 @@ interface Question {
   visualHint: string;
 }
 
-export default function Sprint({ onFinish }: { onFinish: (score: number) => void }) {
+export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (score: number) => void; isTestMode?: boolean }) {
   const [timeLeft, setTimeLeft] = useState(1200);
   const [isPaused, setIsPaused] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
@@ -27,14 +27,12 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
   const initialTime = useRef(1200);
 
   useEffect(() => {
-    const isTestMode = typeof window !== 'undefined' && 
-      (window.location.search.includes('test=true') || sessionStorage.getItem('test_mode') === 'true');
     if (isTestMode) {
       console.log('Test override detected: Setting sprint duration to 5 seconds.');
       initialTime.current = 5;
       setTimeLeft(5);
     }
-  }, []);
+  }, [isTestMode]);
   
   const questionStartTime = useRef<number>(Date.now());
 
@@ -77,7 +75,6 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
     setIsFinished(true);
     const duration = Math.max(0, initialTime.current - timeLeft);
     await finishSession(score, duration);
-    onFinish(score);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,7 +114,7 @@ export default function Sprint({ onFinish }: { onFinish: (score: number) => void
         <h2 className="text-4xl font-bold text-green-700">Time's Up! 🏁</h2>
         <p className="text-2xl text-slate-800">You scored <span className="font-bold text-blue-700">{score}</span> points!</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => onFinish(score)}
           className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-2xl font-bold text-xl cursor-pointer"
         >
           Back to Dashboard

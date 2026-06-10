@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Sprint from './Sprint';
 import Link from 'next/link';
+import { switchUser, startNewProfileOnboarding } from '@/app/actions/user';
 
 interface User {
   id: string;
@@ -12,7 +13,7 @@ interface User {
   avatar?: string;
 }
 
-export default function Dashboard({ user }: { user: User }) {
+export default function Dashboard({ user, allUsers = [], isTestMode = false }: { user: User; allUsers?: User[]; isTestMode?: boolean }) {
   const [isSprintActive, setIsSprintActive] = useState(false);
 
   const handleSprintFinish = (score: number) => {
@@ -22,7 +23,7 @@ export default function Dashboard({ user }: { user: User }) {
   if (isSprintActive) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/50 to-indigo-50/70 py-12 px-4">
-        <Sprint onFinish={handleSprintFinish} />
+        <Sprint onFinish={handleSprintFinish} isTestMode={isTestMode} />
       </div>
     );
   }
@@ -30,7 +31,7 @@ export default function Dashboard({ user }: { user: User }) {
   return (
     <main className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/50 to-indigo-50/70 py-12 px-4 relative">
       <div className="max-w-4xl mx-auto space-y-8">
-        <header className="flex justify-between items-center bg-white/95 text-slate-900 p-6 rounded-2xl shadow-sm border-2 border-teal-100">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/95 text-slate-900 p-6 rounded-2xl shadow-sm border-2 border-teal-100 gap-4">
           <div className="flex items-center gap-4">
             <span className="text-4xl">{user.avatar || '🐣'}</span>
             <div>
@@ -38,8 +39,30 @@ export default function Dashboard({ user }: { user: User }) {
               <p className="text-slate-600 font-medium">Year {user.yearGroup || 5} • Ready for your daily 20-minute math sprint?</p>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-orange-600">🔥 {user.currentStreak} Day Streak</div>
+          <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
+            <div className="text-xl md:text-2xl font-bold text-orange-600 whitespace-nowrap">🔥 {user.currentStreak} Day Streak</div>
+            <div className="flex items-center gap-2 bg-slate-100/90 px-3 py-2 rounded-2xl border border-slate-200 shadow-inner">
+              <span className="text-sm font-bold text-slate-500">Profile:</span>
+              <select
+                value={user.id}
+                onChange={async (e) => {
+                  const val = e.target.value;
+                  if (val === 'new') {
+                    await startNewProfileOnboarding();
+                  } else {
+                    await switchUser(val);
+                  }
+                }}
+                className="bg-transparent font-extrabold text-slate-800 focus:outline-none cursor-pointer text-sm md:text-base pr-4"
+              >
+                {allUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} (Yr {u.yearGroup})
+                  </option>
+                ))}
+                <option value="new" className="text-teal-600 font-bold">➕ Add Profile...</option>
+              </select>
+            </div>
           </div>
         </header>
 

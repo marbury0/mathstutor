@@ -1,9 +1,13 @@
-import { getUser } from './actions/user';
+import { cookies } from 'next/headers';
+import { getUser, getAllUsers } from './actions/user';
 import Onboarding from '@/components/Onboarding';
 import Dashboard from '@/components/Dashboard';
 
 export default async function Home() {
   const user = await getUser();
+  const allUsers = await getAllUsers();
+  const cookieStore = await cookies();
+  const isTestMode = cookieStore.get('testMode')?.value === 'true';
 
   if (!user) {
     return (
@@ -13,5 +17,5 @@ export default async function Home() {
     );
   }
 
-  return <Dashboard user={user} />;
+  return <Dashboard user={user} allUsers={allUsers} isTestMode={isTestMode} />;
 }

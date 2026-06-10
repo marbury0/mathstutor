@@ -34,12 +34,13 @@ export interface QuestionData {
 
 export async function generateQuestion(
   topic: string,
-  profile: { name: string; age: number; yearGroup: number; hobbies: string[]; pets: { name: string, type: string }[]; difficultyLevel: number }
+  profile: { name: string; age: number; yearGroup: number; hobbies: string[]; pets: { name: string, type: string }[]; difficultyLevel: number },
+  isTestMode = false
 ): Promise<QuestionData> {
   const age = profile.age;
   const petsList = profile.pets.map(p => `${p.name} the ${p.type}`).join(", ");
   
-  if (process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
+  if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
     return {
       topic,
       text: `Mock Year ${profile.yearGroup} question for ${profile.name} who likes ${profile.hobbies.join(", ")} and has pets: ${petsList}. What is 2 + 2?`,
@@ -94,9 +95,10 @@ export async function getAdaptiveHint(
   question: string,
   wrongAnswer: string,
   correctAnswer: string,
-  profileName: string
+  profileName: string,
+  isTestMode = false
 ): Promise<string> {
-  if (process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
+  if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
     return `Hey ${profileName}, think about what you get when you put 2 and 2 together!`;
   }
   const prompt = `
@@ -114,9 +116,10 @@ export async function diagnoseError(
   question: string,
   wrongAnswer: string,
   correctAnswer: string,
-  yearGroup: number
+  yearGroup: number,
+  isTestMode = false
 ): Promise<{ misconception: string; advice: string }> {
-  if (process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
+  if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
     return {
       misconception: "Calculation error",
       advice: "Double check your simple arithmetic adding 2 and 2."

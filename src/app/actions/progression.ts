@@ -2,7 +2,9 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { cookies, headers } from 'next/headers';
 import { diagnoseError } from '@/lib/ai';
+import { getUser } from './user';
 
 export async function logQuestionResult(
   topicName: string, 
@@ -11,14 +13,15 @@ export async function logQuestionResult(
   wrongAnswer?: string,
   correctAnswer?: string
 ) {
-  const user = await prisma.user.findFirst();
+  const user = await getUser();
   if (!user) return;
 
   const topic = await prisma.topic.findUnique({ 
     where: { 
-      name_yearGroup: {
+      name_yearGroup_userId: {
         name: topicName,
-        yearGroup: user.yearGroup
+        yearGroup: user.yearGroup,
+        userId: user.id
       }
     },
     include: {
@@ -82,6 +85,7 @@ export async function logQuestionResult(
       await prisma.topic.updateMany({
         where: {
           yearGroup: user.yearGroup,
+          userId: user.id,
           difficultyLevel: { lt: minDifficultyFloor }
         },
         data: {
@@ -105,7 +109,10 @@ export async function logQuestionResult(
     // BACKLOG: Error Type Analysis
     if (wrongAnswer && correctAnswer) {
       try {
-        const diagnosis = await diagnoseError("The last math problem", wrongAnswer, correctAnswer, user.yearGroup);
+        const cookieStore = await cookies();
+        const headersList = await headers();
+        const isTestMode = cookieStore.get('testMode')?.value === 'true' || headersList.get('x-e2e-test') === 'true';
+        const diagnosis = await diagnoseError("The last math problem", wrongAnswer, correctAnswer, user.yearGroup, isTestMode);
         misconception = diagnosis.misconception;
         advice = diagnosis.advice;
       } catch (e) {
@@ -133,7 +140,7 @@ export async function logQuestionResult(
 }
 
 export async function finishSession(score: number, duration: number) {
-  const user = await prisma.user.findFirst();
+  const user = await getUser();
   if (!user) return;
 
   const today = new Date();

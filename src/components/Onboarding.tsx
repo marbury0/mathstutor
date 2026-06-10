@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { createUser } from '@/app/actions/user';
-import { seedTopics } from '@/app/actions/seed';
 
 export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [age, setAge] = useState(9);
+  const [yearGroup, setYearGroup] = useState(5);
   const [hobbies, setHobbies] = useState<string[]>([]);
   const [currentHobby, setCurrentHobby] = useState('');
   const [pets, setPets] = useState<{ name: string; type: string }[]>([]);
@@ -33,10 +33,7 @@ export default function Onboarding() {
     console.log('handleFinish called with difficulty:', startingDifficulty);
     setIsSubmitting(true);
     try {
-      // Map Age to Year Group: Age 5 -> Year 1, Age 6 -> Year 2, Age 7 -> Year 3, Age 8 -> Year 4, Age 9 -> Year 5, Age 10+ -> Year 6
-      const yearGroup = Math.max(1, Math.min(6, age - 4));
-      await seedTopics(yearGroup, startingDifficulty);
-      await createUser({ name, age, yearGroup, hobbies, pets });
+      await createUser({ name, age, yearGroup, hobbies, pets, startingDifficulty });
       console.log('handleFinish success');
     } catch (error) {
       console.error('Failed to save user:', error);
@@ -77,23 +74,51 @@ export default function Onboarding() {
       {step === 2 && (
         <div className="space-y-6">
           <h2 className="text-3xl font-bold text-orange-700 text-center">Cool name, {name}! 🎓</h2>
-          <p className="text-xl text-slate-700 text-center">How old are you?</p>
-          <div className="grid grid-cols-4 gap-2">
-            {[5, 6, 7, 8, 9, 10, 11, 12].map((a) => (
-              <button
-                key={a}
-                onClick={() => setAge(a)}
-                className={`p-4 text-xl font-bold rounded-xl border-2 transition-all ${
-                  age === a
-                    ? 'bg-orange-500 text-white border-orange-600 scale-105 shadow-md'
-                    : 'bg-white text-slate-700 border-orange-100 hover:border-orange-300 hover:scale-[1.02]'
-                }`}
-              >
-                {a === 12 ? '12+' : a}
-              </button>
-            ))}
+          
+          <div className="space-y-2">
+            <p className="text-xl text-slate-700 font-bold text-center">How old are you?</p>
+            <div className="grid grid-cols-4 gap-2">
+              {[5, 6, 7, 8, 9, 10, 11, 12].map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => {
+                    setAge(a);
+                    setYearGroup(Math.max(1, Math.min(6, a - 4)));
+                  }}
+                  className={`p-4 text-xl font-bold rounded-xl border-2 transition-all cursor-pointer ${
+                    age === a
+                      ? 'bg-orange-500 text-white border-orange-600 scale-105 shadow-md'
+                      : 'bg-white text-slate-700 border-orange-100 hover:border-orange-300 hover:scale-[1.02]'
+                  }`}
+                >
+                  {a === 12 ? '12+' : a}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-4">
+
+          <div className="space-y-2 pt-2">
+            <p className="text-xl text-slate-700 font-bold text-center">Which year are you in at school?</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 3, 4, 5, 6].map((y) => (
+                <button
+                  key={y}
+                  type="button"
+                  onClick={() => setYearGroup(y)}
+                  className={`p-3 text-lg font-bold rounded-xl border-2 transition-all cursor-pointer ${
+                    yearGroup === y
+                      ? 'bg-teal-500 text-white border-teal-600 scale-105 shadow-md'
+                      : 'bg-white text-slate-700 border-teal-50 hover:border-teal-200 hover:scale-[1.02]'
+                  }`}
+                >
+                  Year {y}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
             <button
               onClick={() => setStep(1)}
               className="flex-1 bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
@@ -172,7 +197,7 @@ export default function Onboarding() {
                 onChange={(e) => setCurrentPetType(e.target.value)}
                 className="flex-1 p-4 text-lg border-2 border-green-200 rounded-xl focus:border-green-500 outline-none text-slate-900 bg-white appearance-none"
               >
-                {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse'].map(type => (
+                {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse', 'Chicken'].map(type => (
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>

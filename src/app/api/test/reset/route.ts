@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { cookies } from 'next/headers';
 
 export async function POST() {
   if (process.env.NODE_ENV === 'production') {
@@ -8,6 +9,10 @@ export async function POST() {
 
   console.log('E2E Reset: Clearing database...');
   try {
+    const cookieStore = await cookies();
+    cookieStore.delete('userId');
+    cookieStore.delete('testMode');
+
     await prisma.questionHistory.deleteMany();
     await prisma.session.deleteMany();
     await prisma.topic.deleteMany();

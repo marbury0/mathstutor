@@ -4,7 +4,7 @@ test.describe('Student Dashboard & Navigation', () => {
   test.beforeEach(async ({ request, page }) => {
     // Reset database and perform onboarding first to have a valid session
     await request.post('/api/test/reset');
-    
+
     await page.goto('/');
     await page.getByPlaceholder('Your name...').fill('Bobby');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
@@ -25,10 +25,10 @@ test.describe('Student Dashboard & Navigation', () => {
   test('should support navigation between student dashboard and parent dashboard', async ({ page }) => {
     // Click View Stats button
     await page.getByRole('link', { name: 'View Stats 📊' }).click();
-    
+
     // Verify we arrived at Parent Dashboard
     await expect(page).toHaveURL(/\/parent/);
-    await expect(page.getByRole('heading', { name: 'Parent Dashboard 📈' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Parent Dashboard: Bobby 📈' })).toBeVisible();
 
     // Click Back to Tutor
     await page.getByRole('link', { name: 'Back to Tutor' }).click();
@@ -41,9 +41,9 @@ test.describe('Student Dashboard & Navigation', () => {
   test('should navigate to parent dashboard via footer parental link', async ({ page }) => {
     // Click footer parental controls link
     await page.getByRole('link', { name: 'Parental Controls & Dashboard' }).click();
-    
+
     // Verify URL
     await expect(page).toHaveURL(/\/parent/);
-    await expect(page.getByRole('heading', { name: 'Parent Dashboard 📈' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Parent Dashboard: Bobby 📈' })).toBeVisible();
   });
 });

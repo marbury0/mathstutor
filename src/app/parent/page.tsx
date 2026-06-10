@@ -1,7 +1,13 @@
-import { getTopics, getSessionHistory } from '../actions/user';
+import { getTopics, getSessionHistory, getUser } from '../actions/user';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export default async function ParentDashboard() {
+  const user = await getUser();
+  if (!user) {
+    redirect('/');
+  }
+
   const topics = await getTopics();
   const sessions = await getSessionHistory();
 
@@ -9,7 +15,9 @@ export default async function ParentDashboard() {
     <main className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/50 to-indigo-50/70 py-12 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="flex justify-between items-center bg-white/95 p-6 rounded-2xl border-2 border-teal-100 shadow-sm">
-          <h1 className="text-3xl font-extrabold text-teal-800">Parent Dashboard 📈</h1>
+          <h1 className="text-3xl font-extrabold text-teal-800">
+            Parent Dashboard: {user.name} 📈
+          </h1>
           <Link href="/" className="text-teal-700 font-extrabold hover:underline">
             Back to Tutor
           </Link>

@@ -24,11 +24,6 @@ export default function RootLayout({
       className={`${nunito.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <script dangerouslySetInnerHTML={{ __html: `
-          if (typeof window !== 'undefined' && window.location.search.includes('test=true')) {
-            sessionStorage.setItem('test_mode', 'true');
-          }
-        `}} />
         {children}
       </body>
     </html>

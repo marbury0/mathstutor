@@ -16,18 +16,32 @@ const CURRICULUM: Record<number, string[]> = {
 };
 
 async function main() {
-  console.log('Start seeding topics...');
+  console.log('Start seeding...');
+  const user = await prisma.user.upsert({
+    where: { id: 'default-user' },
+    update: {},
+    create: {
+      id: 'default-user',
+      name: 'Emily',
+      age: 9,
+      yearGroup: 5,
+      hobbies: JSON.stringify(['Painting']),
+      pets: JSON.stringify([{ name: 'Bunny', type: 'Rabbit' }])
+    }
+  });
+
   for (const [yearGroupStr, topics] of Object.entries(CURRICULUM)) {
     const yearGroup = parseInt(yearGroupStr, 10);
     for (const name of topics) {
       await prisma.topic.upsert({
         where: {
-          name_yearGroup: { name, yearGroup }
+          name_yearGroup_userId: { name, yearGroup, userId: user.id }
         },
         update: {},
         create: {
           name,
           yearGroup,
+          userId: user.id,
           difficultyLevel: 3
         }
       });
