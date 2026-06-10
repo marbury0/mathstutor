@@ -1,7 +1,27 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+const model = genAI.getGenerativeModel({ 
+  model: "gemini-3.5-flash",
+  safetySettings: [
+    {
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+    },
+  ]
+});
 
 /**
  * Cleans LaTeX mathematics notation from text and replaces them with standard readable symbols.
@@ -101,6 +121,10 @@ export async function generateQuestion(
     - For Algebra: Clearly define variables. If b is the number of items, explain finding b as "finding the number of items" (do not use LaTeX $b$).
     - For Word Problems: Keep scenarios logical and numbers age-appropriate. NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees, x or letters directly for variables).
     
+    Child Safety:
+    - The word problem, name context, and explanation must be 100% appropriate and safe for primary school children (Ages 5-11).
+    - NEVER generate scenarios involving violence, fear, weapons, danger, injury, illness, dark themes, or mature topics. Keep the tone warm, positive, and encouraging.
+    
     Return JSON:
     - reasoning: Internal calculation steps.
     - text: The word problem.
@@ -148,6 +172,7 @@ export async function getAdaptiveHint(
     A child named ${profileName} answered "${wrongAnswer}" to: "${question}" (Correct: "${correctAnswer}").
     Provide a friendly hint (don't give the answer).
     NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
+    Child Safety: Ensure the hint tone and language are 100% child-safe, positive, encouraging, and appropriate for primary school kids.
   `;
   const result = await model.generateContent(prompt);
   return cleanMathText(result.response.text());
@@ -174,6 +199,8 @@ export async function diagnoseError(
     The correct answer is "${correctAnswer}".
     
     Analyze their mistake. Are they confusing place value? Did they pick the wrong operation? Did they make a simple calculation error?
+    
+    Child Safety: The output must remain entirely child-appropriate, encouraging, and supportive.
     
     Return a JSON object:
     - misconception: A short description of what they did wrong.
@@ -207,6 +234,7 @@ export async function getAlternativeExplanation(
     
     Explain it in another way that is simple, fun, and extremely easy for a child to understand. Use analogies, visuals, or simple step-by-step guidance.
     NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
+    Child Safety: The explanation must be completely safe, encouraging, and appropriate for primary school children.
   `;
   const result = await model.generateContent(prompt);
   return cleanMathText(result.response.text());
