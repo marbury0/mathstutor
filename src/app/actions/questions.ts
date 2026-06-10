@@ -3,7 +3,7 @@
 import { cookies, headers } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { getUser } from './user';
-import { generateQuestion, getAdaptiveHint } from '@/lib/ai';
+import { generateQuestion, getAdaptiveHint, getAlternativeExplanation } from '@/lib/ai';
 
 export async function fetchNextQuestion() {
   const user = await getUser();
@@ -66,4 +66,15 @@ export async function fetchHint(question: string, wrongAnswer: string, correctAn
   const isTestMode = cookieStore.get('testMode')?.value === 'true' || headersList.get('x-e2e-test') === 'true';
 
   return await getAdaptiveHint(question, wrongAnswer, correctAnswer, user.name, isTestMode);
+}
+
+export async function fetchAlternativeExplanation(question: string, explanation: string) {
+  const user = await getUser();
+  if (!user) throw new Error("No user found");
+
+  const cookieStore = await cookies();
+  const headersList = await headers();
+  const isTestMode = cookieStore.get('testMode')?.value === 'true' || headersList.get('x-e2e-test') === 'true';
+
+  return await getAlternativeExplanation(question, explanation, user.name, isTestMode);
 }

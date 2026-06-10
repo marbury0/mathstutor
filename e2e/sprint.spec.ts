@@ -126,4 +126,23 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await expect(page.getByText('⭐ Score: 1')).toBeVisible();
     await expect(page.getByPlaceholder('Type your answer...')).toHaveValue('');
   });
+
+  test('should show alternative explanation when "Explain in another way!" is clicked', async ({ page }) => {
+    await page.getByRole('button', { name: 'Start Sprint! 🚀' }).click();
+
+    // Complete two wrong answers
+    await page.getByPlaceholder('Type your answer...').fill('111');
+    await page.getByRole('button', { name: 'Submit 🚀' }).click();
+    await page.getByPlaceholder('Type your answer...').fill('222');
+    await page.getByRole('button', { name: 'Try Again! 🔄' }).click();
+
+    // Click "Explain in another way! 💡"
+    await page.getByRole('button', { name: 'Explain in another way! 💡' }).click();
+
+    // Verify alternative explanation shows up
+    await expect(page.getByText('Alternative: Since 2 and 2 make 4, the total is 4.')).toBeVisible();
+
+    // Verify "Explain in another way! 💡" button is hidden now that alternative explanation is displayed
+    await expect(page.getByRole('button', { name: 'Explain in another way! 💡' })).not.toBeVisible();
+  });
 });

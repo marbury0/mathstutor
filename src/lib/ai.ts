@@ -140,3 +140,25 @@ export async function diagnoseError(
   const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
   return JSON.parse(jsonStr);
 }
+
+export async function getAlternativeExplanation(
+  question: string,
+  explanation: string,
+  profileName: string,
+  isTestMode = false
+): Promise<string> {
+  if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
+    return `Alternative: Since 2 and 2 make 4, the total is 4.`;
+  }
+  const prompt = `
+    A child named ${profileName} did not understand this explanation:
+    "${explanation}"
+    
+    For the question:
+    "${question}"
+    
+    Explain it in another way that is simple, fun, and extremely easy for a child to understand. Use analogies, visuals, or simple step-by-step guidance.
+  `;
+  const result = await model.generateContent(prompt);
+  return result.response.text();
+}

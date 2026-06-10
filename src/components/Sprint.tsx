@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchNextQuestion, fetchHint } from '@/app/actions/questions';
+import { fetchNextQuestion, fetchHint, fetchAlternativeExplanation } from '@/app/actions/questions';
 import { logQuestionResult, finishSession } from '@/app/actions/progression';
 
 interface Question {
@@ -23,6 +23,8 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
   const [hint, setHint] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [showFullExplanation, setShowFullExplanation] = useState(false);
+  const [alternativeExplanation, setAlternativeExplanation] = useState<string | null>(null);
+  const [isExplainingLoading, setIsExplainingLoading] = useState(false);
 
   const initialTime = useRef(1200);
 
@@ -41,6 +43,8 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
     setHint(null);
     setAttempts(0);
     setShowFullExplanation(false);
+    setAlternativeExplanation(null);
+    setIsExplainingLoading(false);
     setUserAnswer('');
     try {
       const q = await fetchNextQuestion();
@@ -52,6 +56,19 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
       setIsLoading(false);
     }
   }, []);
+
+  const handleGetAlternativeExplanation = async () => {
+    if (!currentQuestion || isExplainingLoading) return;
+    setIsExplainingLoading(true);
+    try {
+      const alt = await fetchAlternativeExplanation(currentQuestion.text, currentQuestion.explanation);
+      setAlternativeExplanation(alt);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsExplainingLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadNextQuestion();
@@ -184,13 +201,29 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
             {showFullExplanation && (
               <div className="bg-teal-50/50 p-6 rounded-xl border-2 border-teal-100 text-left space-y-4 animate-in zoom-in-95">
                 <p className="font-bold text-teal-900">Don't worry! Here's how to do it:</p>
-                <p className="text-slate-800">{currentQuestion.explanation}</p>
-                <button
-                  onClick={loadNextQuestion}
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-2 rounded-lg cursor-pointer"
-                >
-                  Got it! Next question ➡️
-                </button>
+                <p className="text-slate-800 leading-relaxed">
+                  {alternativeExplanation || currentQuestion.explanation}
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                  {!alternativeExplanation && (
+                    <button
+                      type="button"
+                      disabled={isExplainingLoading}
+                      onClick={handleGetAlternativeExplanation}
+                      className="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 disabled:opacity-50 font-bold py-3 px-4 rounded-xl text-center cursor-pointer transition-colors"
+                    >
+                      {isExplainingLoading ? "Thinking of another way... 🤔" : "Explain in another way! 💡"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={loadNextQuestion}
+                    className="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer transition-colors"
+                  >
+                    Got it! Next question ➡️
+                  </button>
+                </div>
               </div>
             )}
 
