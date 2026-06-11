@@ -12,6 +12,7 @@ model User {
   age            Int       @default(9)
   yearGroup      Int       @default(5)
   avatar         String    @default("🐣") // Emoji or ID
+  tutorName      String    @default("Maths Bot")
   hobbies        String?
   pets           String?
   currentStreak  Int       @default(0)

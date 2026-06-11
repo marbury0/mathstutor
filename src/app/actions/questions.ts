@@ -53,7 +53,8 @@ export async function fetchNextQuestion() {
     yearGroup: user.yearGroup,
     hobbies,
     pets,
-    difficultyLevel: selectedTopic.difficultyLevel
+    difficultyLevel: selectedTopic.difficultyLevel,
+    tutorName: user.tutorName || "Maths Bot"
   }, isTestMode);
 }
 
@@ -65,7 +66,7 @@ export async function fetchHint(question: string, wrongAnswer: string, correctAn
   const headersList = await headers();
   const isTestMode = cookieStore.get('testMode')?.value === 'true' || headersList.get('x-e2e-test') === 'true';
 
-  return await getAdaptiveHint(question, wrongAnswer, correctAnswer, user.name, user.yearGroup, isTestMode);
+  return await getAdaptiveHint(question, wrongAnswer, correctAnswer, user.name, user.yearGroup, user.tutorName || "Maths Bot", isTestMode);
 }
 
 export async function fetchAlternativeExplanation(question: string, explanation: string) {
@@ -76,5 +77,5 @@ export async function fetchAlternativeExplanation(question: string, explanation:
   const headersList = await headers();
   const isTestMode = cookieStore.get('testMode')?.value === 'true' || headersList.get('x-e2e-test') === 'true';
 
-  return await getAlternativeExplanation(question, explanation, user.name, isTestMode);
+  return await getAlternativeExplanation(question, explanation, user.name, user.tutorName || "Maths Bot", isTestMode);
 }

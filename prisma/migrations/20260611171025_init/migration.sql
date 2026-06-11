@@ -5,6 +5,7 @@ CREATE TABLE "User" (
     "age" INTEGER NOT NULL DEFAULT 9,
     "yearGroup" INTEGER NOT NULL DEFAULT 5,
     "avatar" TEXT NOT NULL DEFAULT '🐣',
+    "tutorName" TEXT NOT NULL DEFAULT 'Maths Bot',
     "hobbies" TEXT,
     "pets" TEXT,
     "currentStreak" INTEGER NOT NULL DEFAULT 0,

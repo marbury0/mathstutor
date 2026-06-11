@@ -27,7 +27,7 @@ export function normalizeAnswer(ans: string): string {
   return cleaned.toLowerCase();
 }
 
-export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (score: number) => void; isTestMode?: boolean }) {
+export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Maths Bot' }: { onFinish: (score: number) => void; isTestMode?: boolean; tutorName?: string }) {
   const [timeLeft, setTimeLeft] = useState(1200);
   const [isPaused, setIsPaused] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
@@ -243,7 +243,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
         {isLoading && !isPaused && (
           <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-4 z-10">
             <div className="animate-bounce text-5xl">🤔</div>
-            <p className="font-extrabold text-teal-700 animate-pulse text-lg">Generating your personalized challenge...</p>
+            <p className="font-extrabold text-teal-700 animate-pulse text-lg">{tutorName} is generating your personalized challenge...</p>
           </div>
         )}
 
@@ -297,7 +297,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
             
             {hint && !showFullExplanation && (
               <div className="bg-yellow-50 p-4 rounded-xl border-2 border-yellow-300 text-yellow-950 italic font-semibold animate-in fade-in slide-in-from-top-4">
-                💡 Hint: {hint}
+                💡 {tutorName}&apos;s Hint: {hint}
               </div>
             )}
 
@@ -308,7 +308,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
                 {isExplainingLoading ? (
                   <div className="py-6 flex flex-col items-center justify-center gap-3 text-slate-500 animate-in fade-in">
                     <div className="animate-spin rounded-full h-8 w-8 border-4 border-teal-500 border-t-transparent"></div>
-                    <p className="font-bold text-teal-700 animate-pulse text-sm">Thinking of a fun new way to explain this...</p>
+                    <p className="font-bold text-teal-700 animate-pulse text-sm">{tutorName} is thinking of another way to explain this...</p>
                   </div>
                 ) : (
                   <p className="text-slate-800 leading-relaxed">

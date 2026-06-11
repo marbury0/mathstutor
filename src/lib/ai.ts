@@ -98,18 +98,19 @@ export interface QuestionData {
 
 export async function generateQuestion(
   topic: string,
-  profile: { name: string; age: number; yearGroup: number; hobbies: string[]; pets: { name: string, type: string }[]; difficultyLevel: number },
+  profile: { name: string; age: number; yearGroup: number; hobbies: string[]; pets: { name: string, type: string }[]; difficultyLevel: number; tutorName?: string },
   isTestMode = false
 ): Promise<QuestionData> {
   const age = profile.age;
   const petsList = profile.pets.map(p => `${p.name} the ${p.type}`).join(", ");
+  const tutorName = profile.tutorName || "Maths Bot";
   
   if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
     return {
       topic,
       text: `Mock Year ${profile.yearGroup} question for ${profile.name} who likes ${profile.hobbies.join(", ")} and has pets: ${petsList}. What is 2 + 2?`,
       answer: "4",
-      explanation: "Since 2 + 2 equals 4, the answer is 4.",
+      explanation: `Since 2 + 2 equals 4, the answer is 4, explains ${tutorName}.`,
       reasoning: "2 + 2 = 4",
       visualHint: "🍎🍎 + 🍎🍎 = ?"
     };
@@ -117,7 +118,7 @@ export async function generateQuestion(
 
   
   const prompt = `
-    You are an expert UK Primary School Maths Tutor.
+    You are an expert UK Primary School Maths Tutor. Your name is "${tutorName}".
     Generate a word problem for "${topic}" (Year ${profile.yearGroup}, Age ${age}).
     Personalize for ${profile.name} (Likes: ${profile.hobbies.join(", ")}, Pets: ${petsList}).
     
@@ -170,14 +171,17 @@ export async function getAdaptiveHint(
   correctAnswer: string,
   profileName: string,
   yearGroup: number,
+  tutorName = 'Maths Bot',
   isTestMode = false
 ): Promise<string> {
   if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
-    return `Hey ${profileName}, think about what you get when you put 2 and 2 together!`;
+    return `Hey ${profileName}, ${tutorName} thinks you should think about what you get when you put 2 and 2 together!`;
   }
   const prompt = `
+    You are an expert UK Primary School Maths Tutor named "${tutorName}".
     A Year ${yearGroup} student named ${profileName} answered "${wrongAnswer}" to: "${question}" (Correct: "${correctAnswer}").
     Provide a friendly, age-appropriate hint (don't give the answer) suitable for a Year ${yearGroup} student.
+    Speak directly to the child as "${tutorName}". Keep the tone warm, positive, encouraging, and child-safe.
     NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
     Child Safety: Ensure the hint tone and language are 100% child-safe, positive, encouraging, and appropriate for primary school kids.
   `;
@@ -227,12 +231,14 @@ export async function getAlternativeExplanation(
   question: string,
   explanation: string,
   profileName: string,
+  tutorName = 'Maths Bot',
   isTestMode = false
 ): Promise<string> {
   if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
-    return `Alternative: Since 2 and 2 make 4, the total is 4.`;
+    return `Alternative: Since 2 and 2 make 4, the total is 4, explains ${tutorName}.`;
   }
   const prompt = `
+    You are an expert UK Primary School Maths Tutor named "${tutorName}".
     A child named ${profileName} did not understand this explanation:
     "${explanation}"
     
@@ -240,6 +246,7 @@ export async function getAlternativeExplanation(
     "${question}"
     
     Explain it in another way that is simple, fun, and extremely easy for a child to understand. Use analogies, visuals, or simple step-by-step guidance.
+    Speak directly to the child as "${tutorName}". Keep the tone warm, positive, encouraging, and child-safe.
     NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
     Child Safety: The explanation must be completely safe, encouraging, and appropriate for primary school children.
   `;

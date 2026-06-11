@@ -14,6 +14,7 @@ export default function Onboarding() {
   const [currentPetName, setCurrentPetName] = useState('');
   const [currentPetType, setCurrentPetType] = useState('Dog');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tutorName, setTutorName] = useState('Maths Bot');
 
   const addHobby = () => {
     if (currentHobby.trim()) {
@@ -33,7 +34,7 @@ export default function Onboarding() {
     console.log('handleFinish called with difficulty:', startingDifficulty);
     setIsSubmitting(true);
     try {
-      await createUser({ name, age, yearGroup, hobbies, pets, startingDifficulty });
+      await createUser({ name, age, yearGroup, hobbies, pets, startingDifficulty, tutorName: tutorName.trim() });
       console.log('handleFinish success');
     } catch (error) {
       console.error('Failed to save user:', error);
@@ -73,7 +74,44 @@ export default function Onboarding() {
 
       {step === 2 && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-orange-700 text-center">Cool name, {name}! 🎓</h2>
+          <h2 className="text-3xl font-bold text-teal-800 text-center">Give me a name! 🤖</h2>
+          <p className="text-xl text-slate-700 text-center font-medium">
+            Hi {name}! What would you like to call your new Maths Tutor?
+          </p>
+          <input
+            type="text"
+            value={tutorName}
+            onChange={(e) => setTutorName(e.target.value)}
+            className="w-full p-4 text-xl border-2 border-teal-200 rounded-xl focus:border-teal-400 outline-none text-slate-950 bg-white font-medium"
+            placeholder="Tutor's name (e.g. Maths Bot, Mathy)..."
+            autoFocus
+          />
+          <div className="flex gap-4">
+            <button
+              onClick={() => setStep(1)}
+              className="flex-1 bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => {
+                if (tutorName.trim()) {
+                  setStep(3);
+                } else {
+                  alert('Please give your tutor a name! 😊');
+                }
+              }}
+              className="flex-1 bg-teal-500 hover:bg-teal-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-lg transition-all cursor-pointer shadow-md"
+            >
+              Next! ➡️
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="space-y-6">
+          <h2 className="text-3xl font-bold text-orange-700 text-center font-extrabold text-orange-800">Cool name, {name}! 🎓</h2>
           
           <div className="space-y-2">
             <p className="text-xl text-slate-700 font-bold text-center">How old are you?</p>
@@ -120,13 +158,13 @@ export default function Onboarding() {
 
           <div className="flex gap-4 pt-4">
             <button
-              onClick={() => setStep(1)}
+              onClick={() => setStep(2)}
               className="flex-1 bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
             >
               Back
             </button>
             <button
-              onClick={() => setStep(3)}
+              onClick={() => setStep(4)}
               className="flex-1 bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-lg transition-all cursor-pointer shadow-md"
             >
               Next! ➡️
@@ -135,9 +173,9 @@ export default function Onboarding() {
         </div>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-purple-700 text-center">Awesome! 🌟</h2>
+          <h2 className="text-3xl font-bold text-purple-700 text-center font-extrabold text-purple-800">Awesome! 🌟</h2>
           <p className="text-xl text-slate-700 text-center">What do you love doing? (Hobbies, games...)</p>
           <div className="flex gap-2">
             <input
@@ -146,9 +184,10 @@ export default function Onboarding() {
               onChange={(e) => setCurrentHobby(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addHobby()}
               className="flex-1 p-4 text-lg border-2 border-purple-200 rounded-xl focus:border-purple-500 outline-none text-slate-900 bg-white"
-              placeholder="e.g. Minecraft, Football..."
+              placeholder="e.g. Football, Coding..."
             />
             <button
+              type="button"
               onClick={addHobby}
               className="bg-purple-500 hover:bg-purple-600 text-white px-6 rounded-xl font-bold cursor-pointer transition-colors"
             >
@@ -164,13 +203,13 @@ export default function Onboarding() {
           </div>
           <div className="flex gap-4">
             <button
-              onClick={() => setStep(2)}
+              onClick={() => setStep(3)}
               className="flex-1 bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
             >
               Back
             </button>
             <button
-              onClick={() => setStep(4)}
+              onClick={() => setStep(5)}
               className="flex-1 bg-purple-500 hover:bg-purple-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-lg transition-all cursor-pointer shadow-md"
             >
               Almost done! ➡️
@@ -179,9 +218,9 @@ export default function Onboarding() {
         </div>
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-green-700 text-center">One last thing! 🐾</h2>
+          <h2 className="text-3xl font-bold text-green-700 text-center font-extrabold text-green-800">One last thing! 🐾</h2>
           <p className="text-xl text-slate-700 text-center">Do you have any pets? What are they?</p>
           <div className="space-y-3">
             <input
@@ -195,13 +234,14 @@ export default function Onboarding() {
               <select
                 value={currentPetType}
                 onChange={(e) => setCurrentPetType(e.target.value)}
-                className="flex-1 p-4 text-lg border-2 border-green-200 rounded-xl focus:border-green-500 outline-none text-slate-900 bg-white appearance-none"
+                className="flex-1 p-4 text-lg border-2 border-green-200 rounded-xl focus:border-green-500 outline-none text-slate-900 bg-white appearance-none cursor-pointer"
               >
                 {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse', 'Chicken'].map(type => (
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
               <button
+                type="button"
                 onClick={addPet}
                 className="bg-green-500 hover:bg-green-600 text-white px-8 rounded-xl font-bold cursor-pointer transition-colors"
               >
@@ -224,7 +264,7 @@ export default function Onboarding() {
               Back
             </button>
             <button
-              onClick={() => setStep(5)}
+              onClick={() => setStep(6)}
               className="flex-1 bg-green-500 hover:bg-green-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-lg transition-all cursor-pointer shadow-md"
             >
               Next! ➡️
@@ -233,9 +273,9 @@ export default function Onboarding() {
         </div>
       )}
 
-      {step === 5 && (
+      {step === 6 && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-red-600 text-center">Ready to learn! 🎒</h2>
+          <h2 className="text-3xl font-bold text-teal-800 text-center font-extrabold text-teal-900">Ready to learn! 🎒</h2>
           <p className="text-xl text-slate-700 text-center font-medium">How do you feel about maths?</p>
           
           {isSubmitting ? (
@@ -264,7 +304,7 @@ export default function Onboarding() {
           {!isSubmitting && (
             <div className="flex gap-4 pt-4">
               <button
-                onClick={() => setStep(4)}
+                onClick={() => setStep(5)}
                 className="w-full bg-gray-200 text-slate-800 font-bold py-4 rounded-xl text-lg cursor-pointer hover:bg-gray-300 transition-colors"
               >
                 Back

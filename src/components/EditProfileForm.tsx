@@ -10,12 +10,14 @@ interface User {
   yearGroup: number;
   hobbies?: string | null;
   pets?: string | null;
+  tutorName?: string | null;
 }
 
 export default function EditProfileForm({ user }: { user: User }) {
   const [name, setName] = useState(user.name);
   const [age, setAge] = useState(user.age);
   const [yearGroup, setYearGroup] = useState(user.yearGroup);
+  const [tutorName, setTutorName] = useState(user.tutorName || 'Maths Bot');
   
   const [hobbies, setHobbies] = useState<string[]>(() => {
     try {
@@ -78,7 +80,8 @@ export default function EditProfileForm({ user }: { user: User }) {
         age,
         yearGroup,
         hobbies,
-        pets
+        pets,
+        tutorName: tutorName.trim()
       });
       setMessage({ text: 'Profile updated successfully! 🎉', type: 'success' });
       setTimeout(() => setMessage(null), 3000);
@@ -106,6 +109,19 @@ export default function EditProfileForm({ user }: { user: User }) {
             onChange={(e) => setName(e.target.value)}
             className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-teal-400 outline-none text-slate-900 bg-white font-medium"
             placeholder="Name..."
+            disabled={isSaving}
+          />
+        </div>
+
+        {/* Tutor's Name */}
+        <div className="space-y-1">
+          <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Tutor&apos;s Name 🤖</label>
+          <input
+            type="text"
+            value={tutorName}
+            onChange={(e) => setTutorName(e.target.value)}
+            className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-teal-400 outline-none text-slate-900 bg-white font-medium"
+            placeholder="Tutor's Name..."
             disabled={isSaving}
           />
         </div>
