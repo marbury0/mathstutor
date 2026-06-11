@@ -103,9 +103,16 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
   };
 
   const handleSaveAndExit = async () => {
-    const duration = Math.max(0, initialTime.current - timeLeft);
-    await finishSession(score, duration);
-    onFinish(score);
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      const duration = Math.max(0, initialTime.current - timeLeft);
+      await finishSession(score, duration);
+      onFinish(score);
+    } catch (e) {
+      console.error(e);
+      setIsLoading(false);
+    }
   };
 
   const handleDiscardAndExit = () => {
@@ -144,43 +151,48 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
     e.preventDefault();
     if (!currentQuestion || isLoading || isPaused) return;
 
-    const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
-    const trimmedUser = userAnswer.trim();
-    const trimmedCorrect = currentQuestion.answer.trim();
-    const normalizedUser = normalizeAnswer(userAnswer);
-    const normalizedCorrect = normalizeAnswer(currentQuestion.answer);
+    setIsLoading(true);
+    try {
+      const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
+      const trimmedUser = userAnswer.trim();
+      const trimmedCorrect = currentQuestion.answer.trim();
+      const normalizedUser = normalizeAnswer(userAnswer);
+      const normalizedCorrect = normalizeAnswer(currentQuestion.answer);
 
-    if (normalizedUser === normalizedCorrect) {
-      await logQuestionResult(
-        currentQuestion.topic,
-        true,
-        timeTaken,
-        currentQuestion.text,
-        trimmedUser,
-        trimmedCorrect
-      );
-      setScore(score + 1);
-      loadNextQuestion();
-    } else {
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      
-      if (newAttempts === 1) {
-        setIsLoading(true);
-        const hintText = await fetchHint(currentQuestion.text, trimmedUser, trimmedCorrect);
-        setHint(hintText);
-        setIsLoading(false);
-      } else {
+      if (normalizedUser === normalizedCorrect) {
         await logQuestionResult(
           currentQuestion.topic,
-          false,
+          true,
           timeTaken,
           currentQuestion.text,
           trimmedUser,
           trimmedCorrect
         );
-        setShowFullExplanation(true);
+        setScore(score + 1);
+        await loadNextQuestion();
+      } else {
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        
+        if (newAttempts === 1) {
+          const hintText = await fetchHint(currentQuestion.text, trimmedUser, trimmedCorrect);
+          setHint(hintText);
+        } else {
+          await logQuestionResult(
+            currentQuestion.topic,
+            false,
+            timeTaken,
+            currentQuestion.text,
+            trimmedUser,
+            trimmedCorrect
+          );
+          setShowFullExplanation(true);
+        }
       }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -290,27 +302,36 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
             )}
 
             {showFullExplanation && (
-              <div className="bg-teal-50/50 p-6 rounded-xl border-2 border-teal-100 text-left space-y-4 animate-in zoom-in-95">
+              <div className="bg-teal-50/50 p-6 rounded-xl border-2 border-teal-100 text-left space-y-4 animate-in zoom-in-95 relative overflow-hidden">
                 <p className="font-bold text-teal-900">Don&apos;t worry! Here&apos;s how to do it:</p>
-                <p className="text-slate-800 leading-relaxed">
-                  {alternativeExplanation || currentQuestion.explanation}
-                </p>
+                
+                {isExplainingLoading ? (
+                  <div className="py-6 flex flex-col items-center justify-center gap-3 text-slate-500 animate-in fade-in">
+                    <div className="animate-spin rounded-full h-8 w-8 border-4 border-teal-500 border-t-transparent"></div>
+                    <p className="font-bold text-teal-700 animate-pulse text-sm">Thinking of a fun new way to explain this...</p>
+                  </div>
+                ) : (
+                  <p className="text-slate-800 leading-relaxed">
+                    {alternativeExplanation || currentQuestion.explanation}
+                  </p>
+                )}
                 
                 <div className="flex flex-col sm:flex-row gap-2 pt-2">
                   {!alternativeExplanation && (
                     <button
                       type="button"
-                      disabled={isExplainingLoading}
+                      disabled={isExplainingLoading || isLoading}
                       onClick={handleGetAlternativeExplanation}
-                      className="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 disabled:opacity-50 font-bold py-3 px-4 rounded-xl text-center cursor-pointer transition-colors"
+                      className="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 disabled:opacity-50 font-bold py-3 px-4 rounded-xl text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-95 duration-200"
                     >
-                      {isExplainingLoading ? "Thinking of another way... 🤔" : "Explain in another way! 💡"}
+                      {isExplainingLoading ? "Thinking... 🤔" : "Explain in another way! 💡"}
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={loadNextQuestion}
-                    className="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer transition-colors"
+                    disabled={isLoading || isExplainingLoading}
+                    className="flex-1 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-95 duration-200"
                   >
                     Got it! Next question ➡️
                   </button>
