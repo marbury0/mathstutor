@@ -154,6 +154,15 @@ export async function finishSession(score: number, duration: number) {
   if (lastSprint) lastSprint.setHours(0, 0, 0, 0);
 
   let newStreak = user.currentStreak;
+
+  // Always record the completed session to history
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      score,
+      duration,
+    },
+  });
   
   if (!lastSprint || lastSprint.getTime() < today.getTime()) {
     const yesterday = new Date(today);
@@ -170,12 +179,6 @@ export async function finishSession(score: number, duration: number) {
       data: {
         currentStreak: newStreak,
         lastSprintDate: today,
-        sessions: {
-          create: {
-            score,
-            duration,
-          },
-        },
       },
     });
   }
