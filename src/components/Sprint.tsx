@@ -183,7 +183,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
         </div>
       </div>
 
-      <div className="bg-white/95 text-slate-900 p-12 rounded-3xl shadow-xl border-4 border-teal-300 text-center space-y-8 relative overflow-hidden">
+      <div className="bg-white/95 text-slate-900 p-12 rounded-3xl shadow-xl border-4 border-teal-300 text-center space-y-8 relative overflow-hidden min-h-[400px] sm:min-h-[450px] flex flex-col justify-center">
         {isLoading && !isPaused && (
           <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-4 z-10">
             <div className="animate-bounce text-5xl">🤔</div>
