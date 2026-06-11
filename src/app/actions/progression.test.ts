@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import prisma from '@/lib/prisma';
 import { logQuestionResult, finishSession } from './progression';
+import { normalizeAnswer } from '../../components/Sprint';
 
 describe('Progression Server Actions', () => {
   const testUserId = 'test-user';
@@ -127,5 +128,29 @@ describe('Progression Server Actions', () => {
     expect(sessions.length).toBe(1);
     expect(sessions[0].score).toBe(5);
     expect(sessions[0].duration).toBe(60);
+  });
+});
+
+describe('Answer Normalization Helper', () => {
+  it('should normalize spaces and casing', () => {
+    expect(normalizeAnswer('  Hello World  ')).toBe('helloworld');
+    expect(normalizeAnswer('FIVE')).toBe('five');
+  });
+
+  it('should strip currency symbols', () => {
+    expect(normalizeAnswer('£5')).toBe('5');
+    expect(normalizeAnswer('$12.50')).toBe('12.5');
+    expect(normalizeAnswer('€ 100')).toBe('100');
+  });
+
+  it('should normalize numeric strings', () => {
+    expect(normalizeAnswer('5.0')).toBe('5');
+    expect(normalizeAnswer('5.00')).toBe('5');
+    expect(normalizeAnswer('12.5')).toBe('12.5');
+  });
+
+  it('should keep non-numeric complex strings intact except lowercased and spaceless', () => {
+    expect(normalizeAnswer('5/8')).toBe('5/8');
+    expect(normalizeAnswer('half')).toBe('half');
   });
 });

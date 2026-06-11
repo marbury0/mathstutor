@@ -65,7 +65,7 @@ export async function fetchHint(question: string, wrongAnswer: string, correctAn
   const headersList = await headers();
   const isTestMode = cookieStore.get('testMode')?.value === 'true' || headersList.get('x-e2e-test') === 'true';
 
-  return await getAdaptiveHint(question, wrongAnswer, correctAnswer, user.name, isTestMode);
+  return await getAdaptiveHint(question, wrongAnswer, correctAnswer, user.name, user.yearGroup, isTestMode);
 }
 
 export async function fetchAlternativeExplanation(question: string, explanation: string) {

@@ -2,7 +2,7 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/ge
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({ 
-  model: "gemini-3.5-flash",
+  model: "gemini-2.0-flash",
   safetySettings: [
     {
       category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -78,7 +78,13 @@ async function validateMath(question: string, reportedAnswer: string): Promise<b
 
   const result = await model.generateContent(prompt);
   const response = result.response.text().trim().toUpperCase();
-  return response.includes("YES");
+  if (response.startsWith("YES") || response === "YES") {
+    return true;
+  }
+  if (response.startsWith("NO") || response === "NO") {
+    return false;
+  }
+  return response.includes("YES") && !response.includes("NOT CORRECT") && !response.includes("INCORRECT");
 }
 
 export interface QuestionData {
@@ -163,14 +169,15 @@ export async function getAdaptiveHint(
   wrongAnswer: string,
   correctAnswer: string,
   profileName: string,
+  yearGroup: number,
   isTestMode = false
 ): Promise<string> {
   if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
     return `Hey ${profileName}, think about what you get when you put 2 and 2 together!`;
   }
   const prompt = `
-    A child named ${profileName} answered "${wrongAnswer}" to: "${question}" (Correct: "${correctAnswer}").
-    Provide a friendly hint (don't give the answer).
+    A Year ${yearGroup} student named ${profileName} answered "${wrongAnswer}" to: "${question}" (Correct: "${correctAnswer}").
+    Provide a friendly, age-appropriate hint (don't give the answer) suitable for a Year ${yearGroup} student.
     NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
     Child Safety: Ensure the hint tone and language are 100% child-safe, positive, encouraging, and appropriate for primary school kids.
   `;

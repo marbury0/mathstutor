@@ -12,6 +12,21 @@ interface Question {
   visualHint: string;
 }
 
+/**
+ * Normalizes answer strings to handle currency symbols, spaces, case-insensitivity, 
+ * and numeric formats (like 5.0 vs 5).
+ */
+export function normalizeAnswer(ans: string): string {
+  if (!ans) return "";
+  let cleaned = ans.replace(/[£$€¥]/g, "").trim();
+  cleaned = cleaned.replace(/\s+/g, "");
+  const num = Number(cleaned);
+  if (!isNaN(num) && cleaned !== "") {
+    return String(num);
+  }
+  return cleaned.toLowerCase();
+}
+
 export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (score: number) => void; isTestMode?: boolean }) {
   const [timeLeft, setTimeLeft] = useState(1200);
   const [isPaused, setIsPaused] = useState(false);
@@ -130,8 +145,10 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
     if (!currentQuestion || isLoading || isPaused) return;
 
     const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
-    const normalizedUser = userAnswer.trim();
-    const normalizedCorrect = currentQuestion.answer.trim();
+    const trimmedUser = userAnswer.trim();
+    const trimmedCorrect = currentQuestion.answer.trim();
+    const normalizedUser = normalizeAnswer(userAnswer);
+    const normalizedCorrect = normalizeAnswer(currentQuestion.answer);
 
     if (normalizedUser === normalizedCorrect) {
       await logQuestionResult(
@@ -139,8 +156,8 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
         true,
         timeTaken,
         currentQuestion.text,
-        normalizedUser,
-        normalizedCorrect
+        trimmedUser,
+        trimmedCorrect
       );
       setScore(score + 1);
       loadNextQuestion();
@@ -150,7 +167,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
       
       if (newAttempts === 1) {
         setIsLoading(true);
-        const hintText = await fetchHint(currentQuestion.text, normalizedUser, normalizedCorrect);
+        const hintText = await fetchHint(currentQuestion.text, trimmedUser, trimmedCorrect);
         setHint(hintText);
         setIsLoading(false);
       } else {
@@ -159,8 +176,8 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
           false,
           timeTaken,
           currentQuestion.text,
-          normalizedUser,
-          normalizedCorrect
+          trimmedUser,
+          trimmedCorrect
         );
         setShowFullExplanation(true);
       }
