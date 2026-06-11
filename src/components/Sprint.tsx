@@ -25,6 +25,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
   const [showFullExplanation, setShowFullExplanation] = useState(false);
   const [alternativeExplanation, setAlternativeExplanation] = useState<string | null>(null);
   const [isExplainingLoading, setIsExplainingLoading] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   const initialTime = useRef(1200);
 
@@ -80,6 +81,26 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
     const duration = Math.max(0, initialTime.current - timeLeft);
     await finishSession(score, duration);
   }, [score, timeLeft]);
+
+  const handleExitClick = () => {
+    setIsPaused(true);
+    setShowExitModal(true);
+  };
+
+  const handleSaveAndExit = async () => {
+    const duration = Math.max(0, initialTime.current - timeLeft);
+    await finishSession(score, duration);
+    onFinish(score);
+  };
+
+  const handleDiscardAndExit = () => {
+    onFinish(score);
+  };
+
+  const handleCancelExit = () => {
+    setShowExitModal(false);
+    setIsPaused(false);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -176,6 +197,12 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
             className="px-4 py-2 bg-teal-100 hover:bg-teal-200 text-teal-800 rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
           >
             {isPaused ? '▶️ Resume' : '⏸️ Pause'}
+          </button>
+          <button
+            onClick={handleExitClick}
+            className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
+          >
+            🚪 Exit
           </button>
         </div>
         <div className="text-2xl font-bold text-orange-600">
@@ -296,6 +323,38 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
           </>
         )}
       </div>
+
+      {showExitModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white p-8 rounded-3xl max-w-md w-full border-4 border-teal-300 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-200">
+            <div className="text-5xl">🚪</div>
+            <h3 className="text-2xl font-extrabold text-teal-900">Exit Sprint?</h3>
+            <p className="text-slate-600 font-medium text-base leading-relaxed">
+              You have answered <span className="text-teal-600 font-bold">{score}</span> {score === 1 ? 'question' : 'questions'} correctly so far. Would you like to save your progress or discard this session?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleSaveAndExit}
+                className="w-full bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-3 px-4 rounded-xl shadow transition-colors cursor-pointer text-base"
+              >
+                💾 Save & Exit
+              </button>
+              <button
+                onClick={handleDiscardAndExit}
+                className="w-full bg-rose-500 hover:bg-rose-600 text-white font-extrabold py-3 px-4 rounded-xl shadow transition-colors cursor-pointer text-base"
+              >
+                🗑️ Discard & Exit
+              </button>
+              <button
+                onClick={handleCancelExit}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl transition-colors cursor-pointer text-base"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
