@@ -204,3 +204,41 @@ export async function getSessionHistory() {
     take: 7 // Last week
   });
 }
+
+export async function getSessionQuestions(sessionId: string) {
+  const user = await getUser();
+  if (!user) throw new Error("No user found");
+
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+  });
+
+  if (!session || session.userId !== user.id) {
+    throw new Error("Session not found or unauthorized");
+  }
+
+  // Calculate session start and end times
+  const endTime = new Date(session.date);
+  const startTime = new Date(endTime.getTime() - (session.duration * 1000) - 10000); // 10s grace period
+
+  // Fetch all question history records for the user's topics that were answered within the session window
+  const questions = await prisma.questionHistory.findMany({
+    where: {
+      topic: {
+        userId: user.id,
+      },
+      answeredAt: {
+        gte: startTime,
+        lte: new Date(endTime.getTime() + 5000), // 5s grace period after session end
+      },
+    },
+    include: {
+      topic: true,
+    },
+    orderBy: {
+      answeredAt: 'asc',
+    },
+  });
+
+  return questions;
+}

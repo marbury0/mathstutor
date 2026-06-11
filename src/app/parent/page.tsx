@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import EditProfileForm from '@/components/EditProfileForm';
 import TopicMasteryManager from '@/components/TopicMasteryManager';
+import RecentSprints from '@/components/RecentSprints';
 
 export default async function ParentDashboard() {
   const user = await getUser();
@@ -30,21 +31,8 @@ export default async function ParentDashboard() {
             <TopicMasteryManager initialTopics={topics} />
 
             <section className="bg-white/95 text-slate-900 p-6 rounded-2xl border-2 border-teal-100 shadow-sm space-y-4">
-              <h2 className="text-xl font-bold text-slate-800">Recent Sprints</h2>
-              <div className="space-y-4">
-                {sessions.length === 0 && <p className="text-slate-600 italic">No sessions recorded yet.</p>}
-                {sessions.map((s: { id: string; date: Date; duration: number; score: number }) => (
-                  <div key={s.id} className="flex justify-between items-center p-3 bg-slate-50/50 rounded-lg border border-teal-50">
-                    <div>
-                      <div className="font-bold text-slate-800">{new Date(s.date).toLocaleDateString()}</div>
-                      <div className="text-sm text-slate-600 font-medium">{Math.floor(s.duration / 60)} mins</div>
-                    </div>
-                    <div className="text-xl font-bold text-teal-600">
-                      {s.score} pts
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <h2 className="text-xl font-bold text-slate-800 font-extrabold text-teal-900">Recent Sprints</h2>
+              <RecentSprints sessions={sessions} />
             </section>
           </div>
 
