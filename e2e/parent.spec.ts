@@ -97,8 +97,8 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
 
     // 3. Edit profile to change name to 'Ethan Progressed', age to 10 (Year 6)
     await page.getByPlaceholder('Name...').fill('Ethan Progressed');
-    await page.selectOption('select:has-text("years old")', '10');
-    await page.selectOption('select:has-text("Year")', '6');
+    await page.locator('select').first().selectOption('10');
+    await page.locator('select').nth(1).selectOption('6');
     await page.getByRole('button', { name: 'Save Profile Changes' }).click();
 
     // 4. Verify success message
@@ -174,7 +174,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     });
 
     // Click trash icon next to 'Custom Division'
-    await page.locator('div:has-text("Custom Division")').getByRole('button', { name: '🗑️' }).click();
+    await page.locator('span', { hasText: 'Custom Division' }).getByRole('button', { name: '🗑️' }).click();
     await expect(page.getByText('Custom Division')).not.toBeVisible();
   });
 });

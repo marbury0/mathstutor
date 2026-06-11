@@ -48,6 +48,9 @@ model QuestionHistory {
   topicId       String
   isCorrect     Boolean
   timeTaken     Int
+  questionText  String?  // Stores the generated question
+  userAnswer    String?  // Stores what the student typed
+  correctAnswer String?  // Stores the correct target answer
   misconception String?  // Stores diagnosed error type
   advice        String?  // Advice for that specific error
   answeredAt    DateTime @default(now())

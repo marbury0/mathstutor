@@ -47,7 +47,7 @@ export default function Onboarding() {
       {step === 1 && (
         <div className="space-y-6">
           <h2 className="text-3xl font-bold text-teal-800 text-center">Hi there! 👋</h2>
-          <p className="text-xl text-slate-700 text-center">I'm your new Maths Tutor. What's your name?</p>
+          <p className="text-xl text-slate-700 text-center">I&apos;m your new Maths Tutor. What&apos;s your name?</p>
           <input
             type="text"
             value={name}

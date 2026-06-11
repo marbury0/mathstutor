@@ -10,8 +10,9 @@ export async function logQuestionResult(
   topicName: string, 
   isCorrect: boolean, 
   timeTaken: number,
-  wrongAnswer?: string,
-  correctAnswer?: string
+  questionText: string,
+  userAnswer: string,
+  correctAnswer: string
 ) {
   const user = await getUser();
   if (!user) return;
@@ -36,7 +37,7 @@ export async function logQuestionResult(
 
   // Simple SRS Logic
   let newMastery = topic.masteryLevel;
-  let nextReview = new Date();
+  const nextReview = new Date();
   let newDifficulty = topic.difficultyLevel;
   let misconception = null;
   let advice = null;
@@ -107,12 +108,12 @@ export async function logQuestionResult(
     }
 
     // BACKLOG: Error Type Analysis
-    if (wrongAnswer && correctAnswer) {
+    if (!isCorrect) {
       try {
         const cookieStore = await cookies();
         const headersList = await headers();
         const isTestMode = cookieStore.get('testMode')?.value === 'true' || headersList.get('x-e2e-test') === 'true';
-        const diagnosis = await diagnoseError("The last math problem", wrongAnswer, correctAnswer, user.yearGroup, isTestMode);
+        const diagnosis = await diagnoseError(questionText, userAnswer, correctAnswer, user.yearGroup, isTestMode);
         misconception = diagnosis.misconception;
         advice = diagnosis.advice;
       } catch (e) {
@@ -131,6 +132,9 @@ export async function logQuestionResult(
         create: {
           isCorrect,
           timeTaken,
+          questionText,
+          userAnswer,
+          correctAnswer,
           misconception,
           advice
         },

@@ -14,11 +14,13 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Topic" (
     "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "yearGroup" INTEGER NOT NULL DEFAULT 5,
     "masteryLevel" REAL NOT NULL DEFAULT 0.0,
     "difficultyLevel" INTEGER NOT NULL DEFAULT 3,
-    "nextReviewDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "nextReviewDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Topic_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -37,6 +39,9 @@ CREATE TABLE "QuestionHistory" (
     "topicId" TEXT NOT NULL,
     "isCorrect" BOOLEAN NOT NULL,
     "timeTaken" INTEGER NOT NULL,
+    "questionText" TEXT,
+    "userAnswer" TEXT,
+    "correctAnswer" TEXT,
     "misconception" TEXT,
     "advice" TEXT,
     "answeredAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -44,4 +49,4 @@ CREATE TABLE "QuestionHistory" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Topic_name_yearGroup_key" ON "Topic"("name", "yearGroup");
+CREATE UNIQUE INDEX "Topic_name_yearGroup_userId_key" ON "Topic"("name", "yearGroup", "userId");

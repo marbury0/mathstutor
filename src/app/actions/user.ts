@@ -88,12 +88,6 @@ export async function startNewProfileOnboarding() {
   revalidatePath('/');
 }
 
-export async function clearActiveUser() {
-  const cookieStore = await cookies();
-  cookieStore.delete('userId');
-  revalidatePath('/');
-}
-
 export async function updateUser(data: {
   name: string;
   age: number;
@@ -104,7 +98,13 @@ export async function updateUser(data: {
   const user = await getUser();
   if (!user) throw new Error("No user found");
 
-  const updateData: any = {
+  const updateData: {
+    name: string;
+    age: number;
+    yearGroup: number;
+    hobbies?: string;
+    pets?: string;
+  } = {
     name: data.name,
     age: data.age,
     yearGroup: data.yearGroup,

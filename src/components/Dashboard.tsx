@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import Sprint from './Sprint';
 import Link from 'next/link';
 import { switchUser, startNewProfileOnboarding } from '@/app/actions/user';
+import { useRouter } from 'next/navigation';
 
 interface User {
   id: string;
@@ -15,21 +16,23 @@ interface User {
 
 export default function Dashboard({ user, allUsers = [], isTestMode = false }: { user: User; allUsers?: User[]; isTestMode?: boolean }) {
   const [isSprintActive, setIsSprintActive] = useState(false);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const handleSprintFinish = (score: number) => {
+  const handleSprintFinish = () => {
     setIsSprintActive(false);
   };
 
   if (isSprintActive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/50 to-indigo-50/70 py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/70 to-indigo-50/70 py-12 px-4">
         <Sprint onFinish={handleSprintFinish} isTestMode={isTestMode} />
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/50 to-indigo-50/70 py-12 px-4 relative">
+    <main className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/70 to-indigo-50/70 py-12 px-4 relative">
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/95 text-slate-900 p-6 rounded-2xl shadow-sm border-2 border-teal-100 gap-4">
           <div className="flex items-center gap-4">
@@ -45,13 +48,17 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
               <span className="text-sm font-bold text-slate-500">Profile:</span>
               <select
                 value={user.id}
-                onChange={async (e) => {
+                disabled={isPending}
+                onChange={(e) => {
                   const val = e.target.value;
-                  if (val === 'new') {
-                    await startNewProfileOnboarding();
-                  } else {
-                    await switchUser(val);
-                  }
+                  startTransition(async () => {
+                    if (val === 'new') {
+                      await startNewProfileOnboarding();
+                    } else {
+                      await switchUser(val);
+                    }
+                    router.refresh();
+                  });
                 }}
                 className="bg-transparent font-extrabold text-slate-800 focus:outline-none cursor-pointer text-sm md:text-base pr-4"
               >
@@ -70,7 +77,7 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
           <section className="bg-white/95 text-slate-900 p-8 rounded-3xl shadow-lg border-4 border-teal-300 flex flex-col items-center text-center space-y-6">
             <div className="text-6xl text-teal-500">⚡</div>
             <h2 className="text-2xl font-bold text-slate-800">The Daily Sprint</h2>
-            <p className="text-slate-600 italic font-medium">"Can you beat your past self today?"</p>
+            <p className="text-slate-600 italic font-medium">&ldquo;Can you beat your past self today?&rdquo;</p>
             <button 
               onClick={() => setIsSprintActive(true)}
               className="w-full bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-4 rounded-2xl text-xl shadow-lg transform transition hover:scale-[1.02] active:scale-95 cursor-pointer"
@@ -82,7 +89,7 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
           <section className="bg-white/95 text-slate-900 p-8 rounded-3xl shadow-lg border-4 border-purple-300 flex flex-col items-center text-center space-y-6">
             <div className="text-6xl text-purple-500">🏆</div>
             <h2 className="text-2xl font-bold text-slate-800">Your Progress</h2>
-            <p className="text-slate-600 font-medium">See how much you've learned this week.</p>
+            <p className="text-slate-600 font-medium">See how much you&apos;ve learned this week.</p>
             <Link 
               href="/parent"
               className="w-full bg-purple-500 hover:bg-purple-600 text-white font-extrabold py-4 rounded-2xl text-xl shadow-lg text-center transform transition hover:scale-[1.02] active:scale-95"

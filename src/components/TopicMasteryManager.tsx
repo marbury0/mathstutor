@@ -24,9 +24,9 @@ export default function TopicMasteryManager({ initialTopics }: { initialTopics: 
     try {
       await addCustomTopic(name);
       setNewTopicName('');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to add topic.');
+      setError(err instanceof Error ? err.message : 'Failed to add topic.');
     } finally {
       setIsMutating(false);
     }
@@ -41,9 +41,9 @@ export default function TopicMasteryManager({ initialTopics }: { initialTopics: 
     setError(null);
     try {
       await deleteTopic(topicId);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to delete topic.');
+      setError(err instanceof Error ? err.message : 'Failed to delete topic.');
     } finally {
       setIsMutating(false);
     }

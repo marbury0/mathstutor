@@ -14,15 +14,15 @@ export default async function ParentDashboard() {
   const sessions = await getSessionHistory();
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/50 to-indigo-50/70 py-12 px-4">
+    <main className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/70 to-indigo-50/70 py-12 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         <header className="flex justify-between items-center bg-white/95 p-6 rounded-2xl border-2 border-teal-100 shadow-sm">
           <h1 className="text-3xl font-extrabold text-teal-800">
             Parent Dashboard: {user.name} 📈
           </h1>
-          <a href="/" className="text-teal-700 font-extrabold hover:underline">
+          <Link href="/" className="text-teal-700 font-extrabold hover:underline">
             Back to Tutor
-          </a>
+          </Link>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

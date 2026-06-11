@@ -32,11 +32,12 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
     if (isTestMode) {
       console.log('Test override detected: Setting sprint duration to 5 seconds.');
       initialTime.current = 5;
-      setTimeLeft(5);
+      const timer = setTimeout(() => setTimeLeft(5), 0);
+      return () => clearTimeout(timer);
     }
   }, [isTestMode]);
   
-  const questionStartTime = useRef<number>(Date.now());
+  const questionStartTime = useRef<number>(0);
   const isFetching = useRef(false);
 
   const loadNextQuestion = useCallback(async () => {
@@ -74,15 +75,26 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
     }
   };
 
+  const handleFinalFinish = useCallback(async () => {
+    setIsFinished(true);
+    const duration = Math.max(0, initialTime.current - timeLeft);
+    await finishSession(score, duration);
+  }, [score, timeLeft]);
+
   useEffect(() => {
-    loadNextQuestion();
+    const timer = setTimeout(() => {
+      loadNextQuestion();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [loadNextQuestion]);
 
   useEffect(() => {
     if (isPaused || isFinished) return;
     if (timeLeft <= 0) {
-      handleFinalFinish();
-      return;
+      const timer = setTimeout(() => {
+        handleFinalFinish();
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     const timer = setInterval(() => {
@@ -90,13 +102,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isFinished, isPaused]);
-
-  const handleFinalFinish = async () => {
-    setIsFinished(true);
-    const duration = Math.max(0, initialTime.current - timeLeft);
-    await finishSession(score, duration);
-  };
+  }, [timeLeft, isFinished, isPaused, handleFinalFinish]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +113,14 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
     const normalizedCorrect = currentQuestion.answer.trim();
 
     if (normalizedUser === normalizedCorrect) {
-      await logQuestionResult(currentQuestion.topic, true, timeTaken);
+      await logQuestionResult(
+        currentQuestion.topic,
+        true,
+        timeTaken,
+        currentQuestion.text,
+        normalizedUser,
+        normalizedCorrect
+      );
       setScore(score + 1);
       loadNextQuestion();
     } else {
@@ -120,7 +133,14 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
         setHint(hintText);
         setIsLoading(false);
       } else {
-        await logQuestionResult(currentQuestion.topic, false, timeTaken, normalizedUser, normalizedCorrect);
+        await logQuestionResult(
+          currentQuestion.topic,
+          false,
+          timeTaken,
+          currentQuestion.text,
+          normalizedUser,
+          normalizedCorrect
+        );
         setShowFullExplanation(true);
       }
     }
@@ -132,7 +152,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
   if (isFinished) {
     return (
       <div className="text-center space-y-6 p-8 bg-white text-slate-900 rounded-3xl shadow-2xl border-4 border-green-500">
-        <h2 className="text-4xl font-bold text-green-700">Time's Up! 🏁</h2>
+        <h2 className="text-4xl font-bold text-green-700">Time&apos;s Up! 🏁</h2>
         <p className="text-2xl text-slate-800">You scored <span className="font-bold text-blue-700">{score}</span> points!</p>
         <button
           onClick={() => onFinish(score)}
@@ -227,7 +247,7 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
 
             {showFullExplanation && (
               <div className="bg-teal-50/50 p-6 rounded-xl border-2 border-teal-100 text-left space-y-4 animate-in zoom-in-95">
-                <p className="font-bold text-teal-900">Don't worry! Here's how to do it:</p>
+                <p className="font-bold text-teal-900">Don&apos;t worry! Here&apos;s how to do it:</p>
                 <p className="text-slate-800 leading-relaxed">
                   {alternativeExplanation || currentQuestion.explanation}
                 </p>
