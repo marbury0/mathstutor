@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchNextQuestion, fetchHint, fetchAlternativeExplanation } from '@/app/actions/questions';
 import { logQuestionResult, finishSession } from '@/app/actions/progression';
+import { Timer, Pause, Play, LogOut, Trophy, HelpCircle, ArrowRight, RotateCcw, Save, Trash2, CheckCircle2 } from 'lucide-react';
 
 interface Question {
   text: string;
@@ -201,9 +202,11 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
 
   if (isFinished) {
     return (
-      <div className="text-center space-y-6 p-8 bg-white text-slate-900 rounded-3xl shadow-2xl border-4 border-green-500">
-        <h2 className="text-4xl font-bold text-green-700">Time&apos;s Up! 🏁</h2>
-        <p className="text-2xl text-slate-800">You scored <span className="font-bold text-blue-700">{score}</span> points!</p>
+      <div className="text-center space-y-6 p-8 bg-theme-card text-slate-900 rounded-3xl shadow-2xl border-4 border-green-500">
+        <h2 className="text-4xl font-bold text-green-700 flex items-center justify-center gap-2">
+          Time&apos;s Up! <CheckCircle2 className="w-10 h-10 text-green-600" />
+        </h2>
+        <p className="text-2xl text-slate-800">You scored <span className="font-bold text-secondary">{score}</span> points!</p>
         <button
           onClick={() => onFinish(score)}
           className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-2xl font-bold text-xl cursor-pointer"
@@ -216,52 +219,53 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="flex justify-between items-center bg-white/95 text-slate-900 p-4 rounded-2xl shadow-sm border-2 border-teal-100">
+      <div className="flex justify-between items-center bg-theme-card text-slate-900 p-4 rounded-2xl shadow-sm border-2 border-theme-border">
         <div className="flex items-center gap-4">
-          <div id="sprint-timer" className="text-2xl font-bold text-teal-800">
-            ⏱️ {minutes}:{seconds.toString().padStart(2, '0')}
+          <div id="sprint-timer" className="text-2xl font-bold text-primary flex items-center gap-2">
+            <Timer className="w-6 h-6 animate-pulse" /> {minutes}:{seconds.toString().padStart(2, '0')}
           </div>
           <button
             onClick={() => setIsPaused(!isPaused)}
-            className="px-4 py-2 bg-teal-100 hover:bg-teal-200 text-teal-800 rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
+            className="px-4 py-2 bg-primary-bg hover:bg-primary/20 text-primary rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-1.5"
           >
-            {isPaused ? '▶️ Resume' : '⏸️ Pause'}
+            {isPaused ? <Play className="w-4 h-4 fill-primary text-primary" /> : <Pause className="w-4 h-4 fill-primary text-primary" />}
+            {isPaused ? 'Resume' : 'Pause'}
           </button>
           <button
             onClick={handleExitClick}
-            className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
+            className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-1.5"
           >
-            🚪 Exit
+            <LogOut className="w-4 h-4" /> Exit
           </button>
         </div>
-        <div className="text-2xl font-bold text-orange-600">
-          ⭐ Score: {score}
+        <div className="text-2xl font-bold text-secondary flex items-center gap-2">
+          <Trophy className="w-6 h-6 text-secondary fill-secondary-bg" /> Score: {score}
         </div>
       </div>
 
-      <div className="bg-white/95 text-slate-900 p-12 rounded-3xl shadow-xl border-4 border-teal-300 text-center space-y-8 relative overflow-hidden min-h-[400px] sm:min-h-[450px] flex flex-col justify-center">
+      <div className="bg-theme-card text-slate-900 p-12 rounded-3xl shadow-xl border-4 border-primary/40 text-center space-y-8 relative overflow-hidden min-h-[400px] sm:min-h-[450px] flex flex-col justify-center">
         {isLoading && !isPaused && (
-          <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-4 z-10">
+          <div className="absolute inset-0 bg-theme-card/85 flex flex-col items-center justify-center gap-4 z-10">
             <div className="animate-bounce text-5xl">🤔</div>
-            <p className="font-extrabold text-teal-700 animate-pulse text-lg">{tutorName} is generating your personalized challenge...</p>
+            <p className="font-extrabold text-primary animate-pulse text-lg">{tutorName} is generating your personalized challenge...</p>
           </div>
         )}
 
         {isPaused ? (
-          <div className="py-12 space-y-6">
-            <h3 className="text-3xl font-extrabold text-teal-800">Sprint Paused! ⏸️</h3>
-            <p className="text-xl text-slate-600">Take a quick breath, relax your mind, and resume when you are ready to learn.</p>
+          <div className="py-12 space-y-6 flex flex-col items-center">
+            <h3 className="text-3xl font-extrabold text-theme-title">Sprint Paused! ⏸️</h3>
+            <p className="text-xl text-slate-600 max-w-md">Take a quick breath, relax your mind, and resume when you are ready to learn.</p>
             <button
               onClick={() => setIsPaused(false)}
-              className="bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-4 px-8 rounded-2xl text-xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer"
+              className="bg-primary hover:bg-primary-hover text-white font-extrabold py-4 px-8 rounded-2xl text-xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center gap-2"
             >
-              Resume Sprint ▶️
+              <Play className="w-6 h-6 fill-white text-white" /> Resume Sprint
             </button>
           </div>
         ) : currentQuestion && (
           <>
-            <div className="text-sm font-extrabold text-teal-700 uppercase tracking-widest">
-              {currentQuestion.topic}
+            <div className="text-sm font-extrabold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
+              <HelpCircle className="w-4 h-4 text-primary" /> {currentQuestion.topic}
             </div>
             
             {currentQuestion.visualHint && (() => {
@@ -285,7 +289,7 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
               }
 
               return (
-                <div className="text-base sm:text-lg md:text-xl font-bold text-teal-800 bg-teal-50/40 px-6 py-3 rounded-2xl border border-teal-100/60 max-w-lg mx-auto leading-relaxed shadow-sm">
+                <div className="text-base sm:text-lg md:text-xl font-bold text-primary bg-primary-bg/50 px-6 py-3 rounded-2xl border border-primary/20 max-w-lg mx-auto leading-relaxed shadow-sm">
                   {currentQuestion.visualHint}
                 </div>
               );
@@ -302,13 +306,13 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
             )}
 
             {showFullExplanation && (
-              <div className="bg-teal-50/50 p-6 rounded-xl border-2 border-teal-100 text-left space-y-4 animate-in zoom-in-95 relative overflow-hidden">
-                <p className="font-bold text-teal-900">Don&apos;t worry! Here&apos;s how to do it:</p>
+              <div className="bg-primary-bg/40 p-6 rounded-xl border-2 border-primary/20 text-left space-y-4 animate-in zoom-in-95 relative overflow-hidden">
+                <p className="font-bold text-theme-title">Don&apos;t worry! Here&apos;s how to do it:</p>
                 
                 {isExplainingLoading ? (
                   <div className="py-6 flex flex-col items-center justify-center gap-3 text-slate-500 animate-in fade-in">
-                    <div className="animate-spin rounded-full h-8 w-8 border-4 border-teal-500 border-t-transparent"></div>
-                    <p className="font-bold text-teal-700 animate-pulse text-sm">{tutorName} is thinking of another way to explain this...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+                    <p className="font-bold text-primary animate-pulse text-sm">{tutorName} is thinking of another way to explain this...</p>
                   </div>
                 ) : (
                   <p className="text-slate-800 leading-relaxed">
@@ -331,9 +335,9 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
                     type="button"
                     onClick={loadNextQuestion}
                     disabled={isLoading || isExplainingLoading}
-                    className="flex-1 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-95 duration-200"
+                    className="flex-1 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-95 duration-200 flex items-center justify-center gap-1.5"
                   >
-                    Got it! Next question ➡️
+                    Got it! Next question <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -345,15 +349,16 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
                   type="text"
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  className="w-full p-3 text-xl md:text-2xl text-center border-4 border-teal-100 rounded-2xl focus:border-teal-400 outline-none transition-colors text-slate-900 bg-white"
+                  className="w-full p-3 text-xl md:text-2xl text-center border-4 border-primary-bg rounded-2xl focus:border-primary outline-none transition-colors text-slate-900 bg-white"
                   placeholder="Type your answer..."
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-3 rounded-2xl text-xl shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full bg-primary hover:bg-primary-hover text-white font-extrabold py-3 rounded-2xl text-xl shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
+                  {attempts > 0 ? <RotateCcw className="w-5 h-5 animate-spin-once" /> : null}
                   {attempts > 0 ? "Try Again! 🔄" : "Submit 🚀"}
                 </button>
               </form>
@@ -364,24 +369,24 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
 
       {showExitModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white p-8 rounded-3xl max-w-md w-full border-4 border-teal-300 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-200">
+          <div className="bg-theme-card p-8 rounded-3xl max-w-md w-full border-4 border-primary/40 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-200">
             <div className="text-5xl">🚪</div>
-            <h3 className="text-2xl font-extrabold text-teal-900">Exit Sprint?</h3>
+            <h3 className="text-2xl font-extrabold text-theme-title">Exit Sprint?</h3>
             <p className="text-slate-600 font-medium text-base leading-relaxed">
-              You have answered <span className="text-teal-600 font-bold">{score}</span> {score === 1 ? 'question' : 'questions'} correctly so far. Would you like to save your progress or discard this session?
+              You have answered <span className="text-primary font-bold">{score}</span> {score === 1 ? 'question' : 'questions'} correctly so far. Would you like to save your progress or discard this session?
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleSaveAndExit}
-                className="w-full bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-3 px-4 rounded-xl shadow transition-colors cursor-pointer text-base"
+                className="w-full bg-primary hover:bg-primary-hover text-white font-extrabold py-3 px-4 rounded-xl shadow transition-colors cursor-pointer text-base flex items-center justify-center gap-1.5"
               >
-                💾 Save & Exit
+                <Save className="w-5 h-5" /> Save & Exit
               </button>
               <button
                 onClick={handleDiscardAndExit}
-                className="w-full bg-rose-500 hover:bg-rose-600 text-white font-extrabold py-3 px-4 rounded-xl shadow transition-colors cursor-pointer text-base"
+                className="w-full bg-rose-500 hover:bg-rose-600 text-white font-extrabold py-3 px-4 rounded-xl shadow transition-colors cursor-pointer text-base flex items-center justify-center gap-1.5"
               >
-                🗑️ Discard & Exit
+                <Trash2 className="w-5 h-5" /> Discard & Exit
               </button>
               <button
                 onClick={handleCancelExit}

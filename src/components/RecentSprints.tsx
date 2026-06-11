@@ -61,10 +61,10 @@ export default function RecentSprints({ sessions }: { sessions: Session[] }) {
           <button
             key={s.id}
             onClick={() => handleSessionClick(s)}
-            className="flex justify-between items-center p-4 bg-slate-50 hover:bg-teal-50/40 rounded-2xl border border-slate-100 hover:border-teal-200 transition-all text-left w-full cursor-pointer hover:scale-[1.01] active:scale-95 group shadow-sm"
+            className="flex justify-between items-center p-4 bg-slate-50 hover:bg-primary-bg/40 rounded-2xl border border-slate-100 hover:border-primary/30 transition-all text-left w-full cursor-pointer hover:scale-[1.01] active:scale-95 group shadow-sm"
           >
             <div>
-              <div className="font-extrabold text-slate-800 group-hover:text-teal-800 transition-colors">
+              <div className="font-extrabold text-slate-800 group-hover:text-primary transition-colors">
                 {new Date(s.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </div>
               <div className="text-sm text-slate-500 font-bold mt-1">
@@ -72,10 +72,10 @@ export default function RecentSprints({ sessions }: { sessions: Session[] }) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-xl font-extrabold text-teal-600 bg-teal-50 px-4 py-2 rounded-xl border border-teal-100 shadow-sm">
+              <div className="text-xl font-extrabold text-primary bg-primary-bg px-4 py-2 rounded-xl border border-primary/20 shadow-sm">
                 ⭐ {s.score} pts
               </div>
-              <div className="text-slate-400 group-hover:text-teal-500 transition-colors font-bold text-lg">
+              <div className="text-slate-400 group-hover:text-primary transition-colors font-bold text-lg">
                 ➔
               </div>
             </div>
@@ -85,18 +85,18 @@ export default function RecentSprints({ sessions }: { sessions: Session[] }) {
 
       {selectedSession && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] border-4 border-teal-300 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-theme-card rounded-3xl max-w-2xl w-full max-h-[85vh] border-4 border-theme-border shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="p-6 bg-teal-50/50 border-b-2 border-teal-100 flex justify-between items-start">
+            <div className="p-6 bg-primary-bg/55 border-b-2 border-primary/20 flex justify-between items-start">
               <div>
-                <h3 className="text-2xl font-extrabold text-teal-900">Sprint Details</h3>
+                <h3 className="text-2xl font-extrabold text-theme-title">Sprint Details</h3>
                 <p className="text-slate-600 font-bold text-sm mt-1">
                   {new Date(selectedSession.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
               <button
                 onClick={closeModal}
-                className="bg-teal-100 hover:bg-teal-200 text-teal-800 p-2 rounded-xl font-extrabold text-sm transition-colors cursor-pointer"
+                className="bg-primary-bg hover:scale-[1.02] text-primary p-2 px-4 rounded-xl font-extrabold text-sm transition-all cursor-pointer"
               >
                 ✕ Close
               </button>
@@ -106,8 +106,8 @@ export default function RecentSprints({ sessions }: { sessions: Session[] }) {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {loading && (
                 <div className="py-12 flex flex-col items-center justify-center gap-4 text-slate-500">
-                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-teal-500 border-t-transparent"></div>
-                  <div className="font-extrabold text-teal-700 animate-pulse animate-in fade-in">Loading questions...</div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
+                  <div className="font-extrabold text-primary animate-pulse animate-in fade-in">Loading questions...</div>
                 </div>
               )}
 
@@ -132,7 +132,7 @@ export default function RecentSprints({ sessions }: { sessions: Session[] }) {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Accuracy</div>
-                      <div className="text-2xl font-extrabold text-teal-600 mt-1">
+                      <div className="text-2xl font-extrabold text-primary mt-1">
                         {Math.round((questions.filter(q => q.isCorrect).length / questions.length) * 100)}%
                       </div>
                     </div>
@@ -149,7 +149,7 @@ export default function RecentSprints({ sessions }: { sessions: Session[] }) {
                         }`}
                       >
                         <div className="flex justify-between items-start gap-4">
-                          <span className="text-xs font-extrabold bg-teal-100/80 text-teal-800 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                          <span className="text-xs font-extrabold bg-primary-bg text-primary px-2.5 py-1 rounded-md uppercase tracking-wider border border-primary/10">
                             {q.topic?.name || 'Mathematics'}
                           </span>
                           <span className="text-xs font-bold text-slate-500 whitespace-nowrap bg-white px-2 py-1 rounded border border-slate-100 shadow-sm">
@@ -208,7 +208,7 @@ export default function RecentSprints({ sessions }: { sessions: Session[] }) {
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
               <button
                 onClick={closeModal}
-                className="bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-2 px-6 rounded-xl shadow cursor-pointer transition-colors"
+                className="bg-primary hover:bg-primary-hover text-white font-extrabold py-2 px-6 rounded-xl shadow cursor-pointer transition-colors"
               >
                 Done
               </button>

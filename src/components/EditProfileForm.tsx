@@ -11,6 +11,8 @@ interface User {
   hobbies?: string | null;
   pets?: string | null;
   tutorName?: string | null;
+  theme?: string | null;
+  avatar?: string | null;
 }
 
 export default function EditProfileForm({ user }: { user: User }) {
@@ -18,6 +20,8 @@ export default function EditProfileForm({ user }: { user: User }) {
   const [age, setAge] = useState(user.age);
   const [yearGroup, setYearGroup] = useState(user.yearGroup);
   const [tutorName, setTutorName] = useState(user.tutorName || 'Maths Bot');
+  const [theme, setTheme] = useState(user.theme || 'ocean');
+  const [avatar, setAvatar] = useState(user.avatar || '🐣');
   
   const [hobbies, setHobbies] = useState<string[]>(() => {
     try {
@@ -81,7 +85,9 @@ export default function EditProfileForm({ user }: { user: User }) {
         yearGroup,
         hobbies,
         pets,
-        tutorName: tutorName.trim()
+        tutorName: tutorName.trim(),
+        theme,
+        avatar
       });
       setMessage({ text: 'Profile updated successfully! 🎉', type: 'success' });
       setTimeout(() => setMessage(null), 3000);
@@ -94,8 +100,8 @@ export default function EditProfileForm({ user }: { user: User }) {
   };
 
   return (
-    <section className="bg-white/95 text-slate-900 p-6 rounded-2xl border-2 border-teal-100 shadow-sm space-y-5">
-      <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+    <section className="bg-theme-card text-slate-900 p-6 rounded-2xl border-2 border-theme-border shadow-sm space-y-5">
+      <h2 className="text-xl font-bold text-theme-title flex items-center gap-2">
         ⚙️ Edit Child Profile
       </h2>
       
@@ -107,23 +113,60 @@ export default function EditProfileForm({ user }: { user: User }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-teal-400 outline-none text-slate-900 bg-white font-medium"
+            className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium"
             placeholder="Name..."
             disabled={isSaving}
           />
         </div>
 
-        {/* Tutor's Name */}
-        <div className="space-y-1">
-          <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Tutor&apos;s Name 🤖</label>
-          <input
-            type="text"
-            value={tutorName}
-            onChange={(e) => setTutorName(e.target.value)}
-            className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-teal-400 outline-none text-slate-900 bg-white font-medium"
-            placeholder="Tutor's Name..."
-            disabled={isSaving}
-          />
+        {/* Avatar Picker */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Profile Avatar 🦊</label>
+          <div className="flex flex-wrap gap-2 pt-0.5 justify-start">
+            {['🐣', '🦊', '🐼', '🐨', '🦁', '🦄', '🐸', '🐯', '🦖', '🐱'].map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => setAvatar(emoji)}
+                className={`text-2xl p-2 rounded-xl border-2 cursor-pointer transition-all hover:scale-110 active:scale-95 ${
+                  avatar === emoji
+                    ? 'border-primary bg-primary-bg scale-105 shadow-sm'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+                disabled={isSaving}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tutor's Name & Theme */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Tutor&apos;s Name 🤖</label>
+            <input
+              type="text"
+              value={tutorName}
+              onChange={(e) => setTutorName(e.target.value)}
+              className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium"
+              placeholder="Tutor's Name..."
+              disabled={isSaving}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Visual Theme 🎨</label>
+            <select
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium cursor-pointer"
+              disabled={isSaving}
+            >
+              <option value="ocean">Ocean Adventure 🌊</option>
+              <option value="peach">Peach Melody 🍑</option>
+            </select>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -136,7 +179,7 @@ export default function EditProfileForm({ user }: { user: User }) {
                 setAge(a);
                 setYearGroup(Math.max(1, Math.min(6, a - 4)));
               }}
-              className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-teal-400 outline-none text-slate-900 bg-white font-medium cursor-pointer"
+              className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium cursor-pointer"
               disabled={isSaving}
             >
               {[5, 6, 7, 8, 9, 10, 11, 12].map((a) => (
@@ -152,7 +195,7 @@ export default function EditProfileForm({ user }: { user: User }) {
             <select
               value={yearGroup}
               onChange={(e) => setYearGroup(parseInt(e.target.value, 10))}
-              className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-teal-400 outline-none text-slate-900 bg-white font-medium cursor-pointer"
+              className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium cursor-pointer"
               disabled={isSaving}
             >
               {[1, 2, 3, 4, 5, 6].map((y) => (
@@ -173,14 +216,14 @@ export default function EditProfileForm({ user }: { user: User }) {
               value={currentHobby}
               onChange={(e) => setCurrentHobby(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addHobby())}
-              className="flex-1 p-2.5 border-2 border-slate-200 rounded-xl focus:border-purple-400 outline-none text-slate-900 bg-white text-sm font-medium"
+              className="flex-1 p-2.5 border-2 border-slate-200 rounded-xl focus:border-secondary outline-none text-slate-900 bg-white text-sm font-medium"
               placeholder="e.g. Football, Coding..."
               disabled={isSaving}
             />
             <button
               type="button"
               onClick={addHobby}
-              className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold px-4 rounded-xl text-sm transition-colors cursor-pointer"
+              className="bg-secondary-bg hover:scale-[1.02] text-secondary font-bold px-4 rounded-xl text-sm transition-all cursor-pointer"
               disabled={isSaving}
             >
               Add Hobby
@@ -192,7 +235,7 @@ export default function EditProfileForm({ user }: { user: User }) {
             {hobbies.map((h) => (
               <span
                 key={h}
-                className="bg-purple-50 text-purple-800 text-xs font-extrabold pl-2.5 pr-1 py-1 rounded-full border border-purple-100 flex items-center gap-1 shadow-sm"
+                className="bg-secondary-bg text-secondary text-xs font-extrabold pl-2.5 pr-1 py-1 rounded-full border border-secondary/20 flex items-center gap-1 shadow-sm"
               >
                 {h}
                 <button
@@ -217,7 +260,7 @@ export default function EditProfileForm({ user }: { user: User }) {
               value={currentPetName}
               onChange={(e) => setCurrentPetName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addPet())}
-              className="w-full p-2.5 border-2 border-slate-200 rounded-xl focus:border-green-400 outline-none text-slate-900 bg-white text-sm font-medium"
+              className="w-full p-2.5 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white text-sm font-medium"
               placeholder="Pet's name (e.g. Fluffy)"
               disabled={isSaving}
             />
@@ -225,7 +268,7 @@ export default function EditProfileForm({ user }: { user: User }) {
               <select
                 value={currentPetType}
                 onChange={(e) => setCurrentPetType(e.target.value)}
-                className="flex-1 p-2.5 border-2 border-slate-200 rounded-xl focus:border-green-400 outline-none text-slate-900 bg-white text-sm font-medium cursor-pointer"
+                className="flex-1 p-2.5 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white text-sm font-medium cursor-pointer"
                 disabled={isSaving}
               >
                 {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse', 'Chicken'].map((type) => (
@@ -237,7 +280,7 @@ export default function EditProfileForm({ user }: { user: User }) {
               <button
                 type="button"
                 onClick={addPet}
-                className="bg-green-100 hover:bg-green-200 text-green-700 font-bold px-6 rounded-xl text-sm transition-colors cursor-pointer"
+                className="bg-primary-bg hover:scale-[1.02] text-primary font-bold px-6 rounded-xl text-sm transition-all cursor-pointer"
                 disabled={isSaving}
               >
                 Add Pet
@@ -250,7 +293,7 @@ export default function EditProfileForm({ user }: { user: User }) {
             {pets.map((p, idx) => (
               <span
                 key={idx}
-                className="bg-green-50 text-green-800 text-xs font-extrabold pl-2.5 pr-1 py-1 rounded-full border border-green-100 flex items-center gap-1 shadow-sm"
+                className="bg-primary-bg text-primary text-xs font-extrabold pl-2.5 pr-1 py-1 rounded-full border border-primary/20 flex items-center gap-1 shadow-sm"
               >
                 {p.name} ({p.type})
                 <button
@@ -281,7 +324,7 @@ export default function EditProfileForm({ user }: { user: User }) {
         <button
           type="submit"
           disabled={isSaving}
-          className="w-full bg-teal-500 hover:bg-teal-600 active:scale-[0.98] text-white font-bold py-3.5 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+          className="w-full bg-primary hover:bg-primary-hover active:scale-[0.98] text-white font-bold py-3.5 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
         >
           {isSaving ? (
             <>

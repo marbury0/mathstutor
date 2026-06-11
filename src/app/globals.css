@@ -5,25 +5,70 @@
   --foreground: #1e293b;
 }
 
+/* Theme 1: Ocean Adventure (Default) */
+:root, .theme-ocean {
+  --theme-primary: #14b8a6; /* teal-500 */
+  --theme-primary-hover: #0d9488; /* teal-600 */
+  --theme-primary-bg: #f0fdfa; /* teal-50 */
+  --theme-secondary: #a855f7; /* purple-500 */
+  --theme-secondary-hover: #9333ea; /* purple-600 */
+  --theme-secondary-bg: #faf5ff; /* purple-50 */
+  --theme-border: #99f6e4; /* teal-200 */
+  --theme-card-bg: rgba(255, 255, 255, 0.95);
+  --theme-text-title: #115e59; /* teal-800 */
+  --theme-text-highlight: #ea580c; /* orange-600 */
+}
+
+/* Theme 2: Peach Melody (Sunset Pastels) */
+.theme-peach {
+  --theme-primary: #ff7f50; /* Coral */
+  --theme-primary-hover: #f96c3a; /* Darker Coral */
+  --theme-primary-bg: #fff5eb; /* Soft peach tint */
+  --theme-secondary: #f472b6; /* Sunset Pink */
+  --theme-secondary-hover: #e0549c; /* Darker Pink */
+  --theme-secondary-bg: #fdf2f8; /* Soft pink tint */
+  --theme-border: #ffccb6; /* Peach border */
+  --theme-card-bg: rgba(255, 253, 249, 0.96); /* Warm off-white card */
+  --theme-text-title: #c2410c; /* Warm orange-red heading */
+  --theme-text-highlight: #db2777; /* Rose highlight */
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-primary: var(--theme-primary);
+  --color-primary-hover: var(--theme-primary-hover);
+  --color-primary-bg: var(--theme-primary-bg);
+  --color-secondary: var(--theme-secondary);
+  --color-secondary-hover: var(--theme-secondary-hover);
+  --color-secondary-bg: var(--theme-secondary-bg);
+  --color-theme-border: var(--theme-border);
+  --color-theme-card: var(--theme-card-bg);
+  --color-theme-title: var(--theme-text-title);
+  --color-text-highlight: var(--theme-text-highlight);
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.theme-peach) {
     --background: #0f172a;
     --foreground: #f8fafc;
   }
 }
 
 body {
-  background-image: url("https://www.freepptbackgrounds.net/wp-content/uploads/2020/03/Gradient-colorful-backgrounds.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
   background-repeat: no-repeat;
   color: var(--foreground);
-  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Ocean Theme Background */
+body:not(:has(.theme-peach)), body:has(.theme-ocean) {
+  background-image: url("https://www.freepptbackgrounds.net/wp-content/uploads/2020/03/Gradient-colorful-backgrounds.jpg");
+}
+
+/* Peach Melody Background */
+body:has(.theme-peach) {
+  background-image: linear-gradient(135deg, #fffcf9 0%, #ffece4 40%, #ffdcd0 100%);
 }

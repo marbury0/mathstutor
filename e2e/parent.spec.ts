@@ -15,9 +15,10 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
-    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Pets Step
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Theme Step
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
-    await expect(page.getByRole('heading', { name: 'Welcome back, Emily! 🌟' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back, Emily!' })).toBeVisible({ timeout: 15000 });
 
     // 2. Navigate to Parent Dashboard
     await page.goto('/parent');
@@ -47,9 +48,10 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
-    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Pets Step
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Theme Step
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
-    await expect(page.getByRole('heading', { name: 'Welcome back, Ethan! 🌟' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back, Ethan!' })).toBeVisible({ timeout: 15000 });
 
     // 2. Start the Sprint
     await page.getByRole('button', { name: 'Start Sprint! 🚀' }).click();
@@ -58,7 +60,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     // 3. Answer one question correctly to score 1 point
     await page.getByPlaceholder('Type your answer...').fill('4');
     await page.getByRole('button', { name: 'Submit 🚀' }).click();
-    await expect(page.getByText('⭐ Score: 1')).toBeVisible();
+    await expect(page.getByText('Score: 1')).toBeVisible();
 
     // 4. Fast-forward the virtual clock by 7 seconds to force the 5-second sprint timer to expire
     console.log('Fast-forwarding clock to end of session...');
@@ -67,7 +69,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     }
 
     // 5. Verify the "Time's Up!" end-screen appears
-    await expect(page.getByText("Time's Up! 🏁")).toBeVisible();
+    await expect(page.getByText("Time's Up!")).toBeVisible();
     await expect(page.getByText('You scored 1 points!')).toBeVisible();
 
     // 6. Navigate back to Home/Dashboard (which reloads the dashboard state)
@@ -91,17 +93,18 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
-    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Pets Step
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Theme Step
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
-    await expect(page.getByRole('heading', { name: 'Welcome back, Ethan! 🌟' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back, Ethan!' })).toBeVisible({ timeout: 15000 });
 
     // 2. Navigate to Parent Dashboard
     await page.goto('/parent');
 
     // 3. Edit profile to change name to 'Ethan Progressed', age to 10 (Year 6)
     await page.getByPlaceholder('Name...', { exact: true }).fill('Ethan Progressed');
-    await page.locator('select').first().selectOption('10');
-    await page.locator('select').nth(1).selectOption('6');
+    await page.locator('select').nth(1).selectOption('10');
+    await page.locator('select').nth(2).selectOption('6');
     await page.getByRole('button', { name: 'Save Profile Changes' }).click();
 
     // 4. Verify success message
@@ -112,7 +115,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
 
     // 6. Navigate back to Home and verify dashboard shows Year 6 details
     await page.getByRole('link', { name: 'Back to Tutor' }).click();
-    await expect(page.getByRole('heading', { name: 'Welcome back, Ethan Progressed! 🌟' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome back, Ethan Progressed!' })).toBeVisible();
     await expect(page.getByText('Year 6 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
   });
 
@@ -134,10 +137,11 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.getByPlaceholder("Pet's name (e.g. Fluffy)").fill('Bella');
     await page.selectOption('select', 'Dog');
     await page.getByRole('button', { name: 'Add' }).click();
-    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Pets Step
 
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Theme Step
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
-    await expect(page.getByRole('heading', { name: 'Welcome back, Chloe! 🌟' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back, Chloe!' })).toBeVisible({ timeout: 15000 });
 
     // 2. Navigate to Parent Dashboard
     await page.goto('/parent');

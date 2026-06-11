@@ -9,13 +9,19 @@ export default async function Home() {
   const cookieStore = await cookies();
   const isTestMode = cookieStore.get('testMode')?.value === 'true';
 
+  const themeClass = user?.theme === 'peach' ? 'theme-peach' : 'theme-ocean';
+
   if (!user) {
     return (
-      <main className="min-h-screen py-12 px-4">
+      <main className="min-h-screen py-12 px-4 theme-ocean">
         <Onboarding />
       </main>
     );
   }
 
-  return <Dashboard user={user} allUsers={allUsers} isTestMode={isTestMode} />;
+  return (
+    <div className={themeClass}>
+      <Dashboard user={user} allUsers={allUsers} isTestMode={isTestMode} />
+    </div>
+  );
 }

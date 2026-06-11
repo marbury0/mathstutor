@@ -12,20 +12,21 @@ test.describe('Student Dashboard & Navigation', () => {
     await page.getByRole('button', { name: '8', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
-    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Pets Step
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Theme Step
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
-    await expect(page.getByRole('heading', { name: 'Welcome back, Bobby! 🌟' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back, Bobby!' })).toBeVisible({ timeout: 15000 });
   });
 
   test('should display correct student profile in dashboard header', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Welcome back, Bobby! 🌟' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome back, Bobby!' })).toBeVisible();
     await expect(page.getByText('Year 4 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
-    await expect(page.getByText('🔥 0 Day Streak')).toBeVisible();
+    await expect(page.getByText('0 Day Streak')).toBeVisible();
   });
 
   test('should support navigation between student dashboard and parent dashboard', async ({ page }) => {
     // Click View Stats button
-    await page.getByRole('link', { name: 'View Stats 📊' }).click();
+    await page.getByRole('link', { name: 'View Stats' }).click();
 
     // Verify we arrived at Parent Dashboard
     await expect(page).toHaveURL(/\/parent/);
@@ -36,7 +37,7 @@ test.describe('Student Dashboard & Navigation', () => {
 
     // Verify we are back on the main student dashboard
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole('heading', { name: 'Welcome back, Bobby! 🌟' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome back, Bobby!' })).toBeVisible();
   });
 
   test('should navigate to parent dashboard via footer parental link', async ({ page }) => {

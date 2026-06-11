@@ -50,11 +50,14 @@ test.describe('Onboarding Flow & Form Validation', () => {
     // Step 5: Pets (Do not add any pets, proceed directly)
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
 
-    // Step 6: Confidence Picker
+    // Step 6: Visual Theme (accept default 'ocean' theme)
+    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+
+    // Step 7: Confidence Picker
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
 
     // Arrive at Dashboard
-    await expect(page.getByRole('heading', { name: 'Welcome back, Alex! 🌟' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back, Alex!' })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Year 3 • Mathy is ready for your daily 20-minute math sprint!')).toBeVisible();
   });
 
@@ -95,11 +98,14 @@ test.describe('Onboarding Flow & Form Validation', () => {
     // Step 5: Pets
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
 
-    // Step 6: Confidence Picker
+    // Step 6: Visual Theme (accept default 'ocean' theme)
+    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+
+    // Step 7: Confidence Picker
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
 
     // Verify Dashboard displays correct info
-    await expect(page.getByRole('heading', { name: 'Welcome back, Sophia! 🌟' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back, Sophia!' })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Year 6 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
   });
 });

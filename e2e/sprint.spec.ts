@@ -12,9 +12,10 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
-    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Pets Step
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Theme Step
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
-    await expect(page.getByRole('heading', { name: 'Welcome back, Danny! 🌟' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back, Danny!' })).toBeVisible({ timeout: 15000 });
   });
 
   test('should start sprint with 20-minute timer and correct UI header details', async ({ page }) => {
@@ -25,10 +26,10 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     const timerText = page.locator('#sprint-timer');
     await expect(timerText).toBeVisible();
     const timerValue = await timerText.innerText();
-    expect(timerValue).toMatch(/⏱️ (20:00|19:\d{2})/);
+    expect(timerValue).toMatch(/^(20:00|19:\d{2})$/);
 
     // Verify score starts at 0
-    await expect(page.getByText('⭐ Score: 0')).toBeVisible();
+    await expect(page.getByText('Score: 0')).toBeVisible();
 
     // Verify question is loaded
     await expect(page.locator('h2')).toContainText('What is 2 + 2?');
@@ -68,7 +69,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await expect(page.getByText(/Since 2 \+ 2 equals 4/)).toBeVisible();
 
     // Verify next progression action button is visible
-    await expect(page.getByRole('button', { name: 'Got it! Next question ➡️' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Got it! Next question' })).toBeVisible();
   });
 
   test('should reset attempt states, clear input, and load next question on explanation acceptance', async ({ page }) => {
@@ -81,7 +82,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await page.getByRole('button', { name: 'Try Again! 🔄' }).click();
 
     // Click Got It
-    await page.getByRole('button', { name: 'Got it! Next question ➡️' }).click();
+    await page.getByRole('button', { name: 'Got it! Next question' }).click();
 
     // Verify hint and explanation are gone
     await expect(page.locator('text=Hint:')).not.toBeVisible();
@@ -102,7 +103,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await page.getByRole('button', { name: 'Submit 🚀' }).click();
 
     // Verify score increases
-    await expect(page.getByText('⭐ Score: 1')).toBeVisible();
+    await expect(page.getByText('Score: 1')).toBeVisible();
 
     // Verify input is cleared for next question
     await expect(page.getByPlaceholder('Type your answer...')).toHaveValue('');
@@ -124,7 +125,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await expect(page.locator('text=Don\'t worry! Here\'s how to do it:')).not.toBeVisible();
 
     // Verify score increases and next question loads
-    await expect(page.getByText('⭐ Score: 1')).toBeVisible();
+    await expect(page.getByText('Score: 1')).toBeVisible();
     await expect(page.getByPlaceholder('Type your answer...')).toHaveValue('');
   });
 

@@ -50,9 +50,9 @@ export default function TopicMasteryManager({ initialTopics }: { initialTopics: 
   };
 
   return (
-    <section className="bg-white/95 text-slate-900 p-6 rounded-2xl border-2 border-teal-100 shadow-sm space-y-5">
+    <section className="bg-theme-card text-slate-900 p-6 rounded-2xl border-2 border-theme-border shadow-sm space-y-5">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-slate-800">Topic Mastery</h2>
+        <h2 className="text-xl font-extrabold text-theme-title">Topic Mastery</h2>
       </div>
 
       {error && (
@@ -84,7 +84,7 @@ export default function TopicMasteryManager({ initialTopics }: { initialTopics: 
             </div>
             <div className="w-full bg-slate-100 rounded-full h-2">
               <div
-                className="bg-teal-500 h-2 rounded-full transition-all"
+                className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${t.masteryLevel * 100}%` }}
               />
             </div>
@@ -99,14 +99,14 @@ export default function TopicMasteryManager({ initialTopics }: { initialTopics: 
             type="text"
             value={newTopicName}
             onChange={(e) => setNewTopicName(e.target.value)}
-            className="flex-1 p-2.5 border-2 border-slate-200 rounded-xl focus:border-teal-400 outline-none text-slate-900 bg-white text-sm font-medium"
+            className="flex-1 p-2.5 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white text-sm font-medium"
             placeholder="e.g. Roman Numerals, Long Division..."
             disabled={isMutating}
           />
           <button
             type="submit"
             disabled={isMutating || !newTopicName.trim()}
-            className="bg-teal-100 hover:bg-teal-200 text-teal-800 disabled:opacity-50 font-bold px-4 rounded-xl text-sm transition-colors cursor-pointer"
+            className="bg-primary-bg hover:scale-[1.02] text-primary disabled:opacity-50 font-bold px-4 rounded-xl text-sm transition-all cursor-pointer"
           >
             Add Topic
           </button>

@@ -14,6 +14,8 @@ export async function createUser(data: {
   pets: { name: string; type: string }[];
   startingDifficulty: number;
   tutorName?: string;
+  theme?: string;
+  avatar?: string;
 }) {
   console.log('Creating user with data:', data);
   try {
@@ -23,6 +25,8 @@ export async function createUser(data: {
         age: data.age,
         yearGroup: data.yearGroup,
         tutorName: data.tutorName || "Maths Bot",
+        theme: data.theme || "ocean",
+        avatar: data.avatar || "🐣",
         hobbies: JSON.stringify(data.hobbies),
         pets: JSON.stringify(data.pets),
       },
@@ -97,6 +101,8 @@ export async function updateUser(data: {
   hobbies?: string[];
   pets?: { name: string; type: string }[];
   tutorName?: string;
+  theme?: string;
+  avatar?: string;
 }) {
   const user = await getUser();
   if (!user) throw new Error("No user found");
@@ -108,6 +114,8 @@ export async function updateUser(data: {
     hobbies?: string;
     pets?: string;
     tutorName?: string;
+    theme?: string;
+    avatar?: string;
   } = {
     name: data.name,
     age: data.age,
@@ -122,6 +130,12 @@ export async function updateUser(data: {
   }
   if (data.tutorName !== undefined) {
     updateData.tutorName = data.tutorName;
+  }
+  if (data.theme !== undefined) {
+    updateData.theme = data.theme;
+  }
+  if (data.avatar !== undefined) {
+    updateData.avatar = data.avatar;
   }
 
   await prisma.user.update({
