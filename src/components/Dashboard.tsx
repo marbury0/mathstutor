@@ -25,14 +25,14 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
 
   if (isSprintActive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/70 to-indigo-50/70 py-12 px-4">
+      <div className="min-h-screen py-12 px-4">
         <Sprint onFinish={handleSprintFinish} isTestMode={isTestMode} />
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50/70 to-indigo-50/70 py-12 px-4 relative">
+    <main className="min-h-screen py-12 px-4 relative">
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/95 text-slate-900 p-6 rounded-2xl shadow-sm border-2 border-teal-100 gap-4">
           <div className="flex items-center gap-4">

@@ -19,7 +19,11 @@
 }
 
 body {
-  background: var(--background);
+  background-image: url("https://www.freepptbackgrounds.net/wp-content/uploads/2020/03/Gradient-colorful-backgrounds.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--foreground);
   font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 }
