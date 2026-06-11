@@ -185,9 +185,9 @@ export default function Sprint({ onFinish, isTestMode = false }: { onFinish: (sc
 
       <div className="bg-white/95 text-slate-900 p-12 rounded-3xl shadow-xl border-4 border-teal-300 text-center space-y-8 relative overflow-hidden">
         {isLoading && !isPaused && (
-          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-            <div className="animate-bounce text-4xl">🤔</div>
-            <p className="absolute bottom-10 font-bold text-teal-700 animate-pulse">Generating your personalized challenge...</p>
+          <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-4 z-10">
+            <div className="animate-bounce text-5xl">🤔</div>
+            <p className="font-extrabold text-teal-700 animate-pulse text-lg">Generating your personalized challenge...</p>
           </div>
         )}
 
