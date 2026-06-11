@@ -184,7 +184,7 @@ export default function Onboarding() {
               onChange={(e) => setCurrentHobby(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addHobby()}
               className="flex-1 p-4 text-lg border-2 border-purple-200 rounded-xl focus:border-purple-500 outline-none text-slate-900 bg-white"
-              placeholder="e.g. Football, Coding..."
+              placeholder="e.g. Minecraft, Football..."
             />
             <button
               type="button"

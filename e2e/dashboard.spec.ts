@@ -8,6 +8,7 @@ test.describe('Student Dashboard & Navigation', () => {
     await page.goto('/');
     await page.getByPlaceholder('Your name...').fill('Bobby');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Tutor Name step
     await page.getByRole('button', { name: '8', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
@@ -18,7 +19,7 @@ test.describe('Student Dashboard & Navigation', () => {
 
   test('should display correct student profile in dashboard header', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Welcome back, Bobby! 🌟' })).toBeVisible();
-    await expect(page.getByText('Year 4 • Ready for your daily 20-minute math sprint?')).toBeVisible();
+    await expect(page.getByText('Year 4 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
     await expect(page.getByText('🔥 0 Day Streak')).toBeVisible();
   });
 

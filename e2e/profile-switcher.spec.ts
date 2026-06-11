@@ -11,6 +11,7 @@ test.describe('Multi-Profile Switcher & User isolation', () => {
     await page.goto('/');
     await page.getByPlaceholder('Your name...').fill('Emily');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Tutor Name step
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
@@ -19,7 +20,7 @@ test.describe('Multi-Profile Switcher & User isolation', () => {
 
     // Verify Emily's dashboard loads
     await expect(page.getByRole('heading', { name: 'Welcome back, Emily! 🌟' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Year 5 • Ready for your daily 20-minute math sprint?')).toBeVisible();
+    await expect(page.getByText('Year 5 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
 
     // 2. Select "Add Profile" to onboard second student: Bobby (Age 8 -> Year 4)
     await page.selectOption('select', 'new');
@@ -27,6 +28,7 @@ test.describe('Multi-Profile Switcher & User isolation', () => {
     // Onboarding form should be visible again
     await page.getByPlaceholder('Your name...').fill('Bobby');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Tutor Name step
     await page.getByRole('button', { name: '8', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
@@ -35,14 +37,14 @@ test.describe('Multi-Profile Switcher & User isolation', () => {
 
     // Verify Bobby's dashboard loads
     await expect(page.getByRole('heading', { name: 'Welcome back, Bobby! 🌟' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Year 4 • Ready for your daily 20-minute math sprint?')).toBeVisible();
+    await expect(page.getByText('Year 4 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
 
     // 3. Switch back to Emily via the profile dropdown
     await page.selectOption('select', { label: 'Emily (Yr 5)' });
 
     // Verify we are back on Emily's dashboard
     await expect(page.getByRole('heading', { name: 'Welcome back, Emily! 🌟' })).toBeVisible();
-    await expect(page.getByText('Year 5 • Ready for your daily 20-minute math sprint?')).toBeVisible();
+    await expect(page.getByText('Year 5 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
 
     // 4. View Emily's Parent Dashboard
     await page.getByRole('link', { name: 'View Stats 📊' }).click();

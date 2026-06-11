@@ -11,6 +11,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.goto('/');
     await page.getByPlaceholder('Your name...').fill('Emily');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Tutor Name step
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
@@ -42,6 +43,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.goto('/?test=true');
     await page.getByPlaceholder('Your name...').fill('Ethan');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Tutor Name step
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
@@ -77,7 +79,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     // 8. Verify the completed session is now logged in the list
     await expect(page.getByText('No sessions recorded yet.')).not.toBeVisible();
     await expect(page.getByText('1 pts')).toBeVisible();
-    await expect(page.getByText('0 mins')).toBeVisible(); // 5 seconds rounds down to 0 minutes
+    await expect(page.getByText('0m 5s duration')).toBeVisible();
   });
 
   test('should allow editing child profile name, age, and year group', async ({ page }) => {
@@ -85,6 +87,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.goto('/');
     await page.getByPlaceholder('Your name...').fill('Ethan');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Tutor Name step
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
@@ -96,7 +99,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.goto('/parent');
 
     // 3. Edit profile to change name to 'Ethan Progressed', age to 10 (Year 6)
-    await page.getByPlaceholder('Name...').fill('Ethan Progressed');
+    await page.getByPlaceholder('Name...', { exact: true }).fill('Ethan Progressed');
     await page.locator('select').first().selectOption('10');
     await page.locator('select').nth(1).selectOption('6');
     await page.getByRole('button', { name: 'Save Profile Changes' }).click();
@@ -110,7 +113,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     // 6. Navigate back to Home and verify dashboard shows Year 6 details
     await page.getByRole('link', { name: 'Back to Tutor' }).click();
     await expect(page.getByRole('heading', { name: 'Welcome back, Ethan Progressed! 🌟' })).toBeVisible();
-    await expect(page.getByText('Year 6 • Ready for your daily 20-minute math sprint?')).toBeVisible();
+    await expect(page.getByText('Year 6 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
   });
 
   test('should allow editing child interests (hobbies/pets) and custom math topics', async ({ page }) => {
@@ -118,6 +121,7 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.goto('/');
     await page.getByPlaceholder('Your name...').fill('Chloe');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Tutor Name step
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     

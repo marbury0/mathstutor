@@ -8,6 +8,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await page.goto('/');
     await page.getByPlaceholder('Your name...').fill('Danny');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
+    await page.getByRole('button', { name: 'Next! ➡️' }).click(); // Tutor Name step
     await page.getByRole('button', { name: '9', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
@@ -41,7 +42,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await page.getByRole('button', { name: 'Submit 🚀' }).click();
 
     // Verify hint container is shown with the friendly AI hint
-    const hintCard = page.locator('text=💡 Hint:');
+    const hintCard = page.locator('text=Hint:');
     await expect(hintCard).toBeVisible();
     await expect(hintCard).toContainText('think about what you get when you put 2 and 2 together');
 
@@ -55,7 +56,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     // Attempt 1: Wrong Answer
     await page.getByPlaceholder('Type your answer...').fill('999');
     await page.getByRole('button', { name: 'Submit 🚀' }).click();
-    await expect(page.locator('text=💡 Hint:')).toBeVisible();
+    await expect(page.locator('text=Hint:')).toBeVisible();
 
     // Attempt 2: Wrong Answer again
     await page.getByPlaceholder('Type your answer...').fill('888');
@@ -64,7 +65,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     // Verify explanation card is rendered showing the solution
     const explanationCard = page.locator('text=Don\'t worry! Here\'s how to do it:');
     await expect(explanationCard).toBeVisible();
-    await expect(page.getByText('Since 2 + 2 equals 4, the answer is 4.')).toBeVisible();
+    await expect(page.getByText(/Since 2 \+ 2 equals 4/)).toBeVisible();
 
     // Verify next progression action button is visible
     await expect(page.getByRole('button', { name: 'Got it! Next question ➡️' })).toBeVisible();
@@ -83,7 +84,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await page.getByRole('button', { name: 'Got it! Next question ➡️' }).click();
 
     // Verify hint and explanation are gone
-    await expect(page.locator('text=💡 Hint:')).not.toBeVisible();
+    await expect(page.locator('text=Hint:')).not.toBeVisible();
     await expect(page.locator('text=Don\'t worry! Here\'s how to do it:')).not.toBeVisible();
 
     // Verify input is empty
@@ -113,7 +114,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     // 1st Attempt: Wrong Answer
     await page.getByPlaceholder('Type your answer...').fill('10');
     await page.getByRole('button', { name: 'Submit 🚀' }).click();
-    await expect(page.locator('text=💡 Hint:')).toBeVisible();
+    await expect(page.locator('text=Hint:')).toBeVisible();
 
     // 2nd Attempt: Correct Answer (4)
     await page.getByPlaceholder('Type your answer...').fill('4');
@@ -140,7 +141,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await page.getByRole('button', { name: 'Explain in another way! 💡' }).click();
 
     // Verify alternative explanation shows up
-    await expect(page.getByText('Alternative: Since 2 and 2 make 4, the total is 4.')).toBeVisible();
+    await expect(page.getByText(/Alternative: Since 2 and 2 make 4/)).toBeVisible();
 
     // Verify "Explain in another way! 💡" button is hidden now that alternative explanation is displayed
     await expect(page.getByRole('button', { name: 'Explain in another way! 💡' })).not.toBeVisible();

@@ -33,25 +33,29 @@ test.describe('Onboarding Flow & Form Validation', () => {
     await page.getByPlaceholder('Your name...').fill('Alex');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
 
-    // Step 2: Age selection (Select Age 7, which maps to Year 3)
+    // Step 2: Tutor Name Selection (custom name "Mathy")
+    await page.getByPlaceholder("Tutor's name (e.g. Maths Bot, Mathy)...").fill('Mathy');
+    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+
+    // Step 3: Age selection (Select Age 7, which maps to Year 3)
     await page.getByRole('button', { name: '7', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
 
-    // Step 3: Hobbies (Add one hobby)
+    // Step 4: Hobbies (Add one hobby)
     await page.getByPlaceholder('e.g. Minecraft, Football...').fill('Chess');
     await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.getByText('Chess')).toBeVisible();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
 
-    // Step 4: Pets (Do not add any pets, proceed directly)
+    // Step 5: Pets (Do not add any pets, proceed directly)
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
 
-    // Step 5: Confidence Picker
+    // Step 6: Confidence Picker
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
 
     // Arrive at Dashboard
     await expect(page.getByRole('heading', { name: 'Welcome back, Alex! 🌟' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Year 3 • Ready for your daily 20-minute math sprint?')).toBeVisible();
+    await expect(page.getByText('Year 3 • Mathy is ready for your daily 20-minute math sprint!')).toBeVisible();
   });
 
   test('should complete onboarding with multiple hobbies and pets and seed Year 6 curriculum', async ({ page }) => {
@@ -61,11 +65,14 @@ test.describe('Onboarding Flow & Form Validation', () => {
     await page.getByPlaceholder('Your name...').fill('Sophia');
     await page.getByRole('button', { name: 'Next! 🚀' }).click();
 
-    // Step 2: Age selection (Select Age 10, which maps to Year 6)
+    // Step 2: Tutor Name Selection (default name "Maths Bot")
+    await page.getByRole('button', { name: 'Next! ➡️' }).click();
+
+    // Step 3: Age selection (Select Age 10, which maps to Year 6)
     await page.getByRole('button', { name: '10', exact: true }).click();
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
 
-    // Step 3: Hobbies (Add multiple)
+    // Step 4: Hobbies (Add multiple)
     await page.getByPlaceholder('e.g. Minecraft, Football...').fill('Minecraft');
     await page.getByRole('button', { name: 'Add' }).click();
     await page.getByPlaceholder('e.g. Minecraft, Football...').fill('Gymnastics');
@@ -74,7 +81,7 @@ test.describe('Onboarding Flow & Form Validation', () => {
     await expect(page.getByText('Gymnastics')).toBeVisible();
     await page.getByRole('button', { name: 'Almost done! ➡️' }).click();
 
-    // Step 4: Pets (Add multiple pets with different types)
+    // Step 5: Pets (Add multiple pets with different types)
     await page.getByPlaceholder("Pet's name (e.g. Fluffy)").fill('Whiskers');
     await page.selectOption('select', 'Cat');
     await page.getByRole('button', { name: 'Add' }).click();
@@ -85,14 +92,14 @@ test.describe('Onboarding Flow & Form Validation', () => {
     await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.getByText('Goldie (Fish)')).toBeVisible();
 
-    // Step 4: Pets
+    // Step 5: Pets
     await page.getByRole('button', { name: 'Next! ➡️' }).click();
 
-    // Step 5: Confidence Picker
+    // Step 6: Confidence Picker
     await page.getByRole('button', { name: 'I do okay! 👍' }).click();
 
     // Verify Dashboard displays correct info
     await expect(page.getByRole('heading', { name: 'Welcome back, Sophia! 🌟' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Year 6 • Ready for your daily 20-minute math sprint?')).toBeVisible();
+    await expect(page.getByText('Year 6 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
   });
 });
