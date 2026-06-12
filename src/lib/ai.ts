@@ -77,14 +77,15 @@ async function validateMath(question: string, reportedAnswer: string): Promise<b
   `;
 
   const result = await model.generateContent(prompt);
-  const response = result.response.text().trim().toUpperCase();
-  if (response.startsWith("YES") || response === "YES") {
+  const response = result.response.text().trim().toLowerCase().replace(/[^a-z]/g, "");
+  if (response === "yes" || response.startsWith("yes")) {
     return true;
   }
-  if (response.startsWith("NO") || response === "NO") {
+  if (response === "no" || response.startsWith("no")) {
     return false;
   }
-  return response.includes("YES") && !response.includes("NOT CORRECT") && !response.includes("INCORRECT");
+  const rawResponse = result.response.text().toUpperCase();
+  return rawResponse.includes("YES") && !rawResponse.includes("NOT CORRECT") && !rawResponse.includes("INCORRECT") && !rawResponse.includes("NO");
 }
 
 export interface QuestionData {

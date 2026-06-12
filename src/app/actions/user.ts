@@ -65,8 +65,7 @@ export async function getUser() {
     });
     if (user) return user;
   }
-  // Fallback to first user in database
-  return await prisma.user.findFirst();
+  return null;
 }
 
 export async function getAllUsers() {

@@ -16,36 +16,60 @@ export async function fetchNextQuestion() {
   const hobbies = user.hobbies ? JSON.parse(user.hobbies) : [];
   const pets = user.pets ? JSON.parse(user.pets) : [];
 
-  // SRS Logic: Find topics due for review
-  const now = new Date();
-  let dueTopics = await prisma.topic.findMany({
+  // 1. Fetch all topics for the user along with their question counts
+  let topics = await prisma.topic.findMany({
     where: {
       userId: user.id,
       yearGroup: user.yearGroup,
-      nextReviewDate: {
-        lte: now
-      }
     },
-    orderBy: {
-      masteryLevel: 'asc'
+    include: {
+      _count: {
+        select: { questionHistory: true }
+      }
     }
   });
 
-  // If no topics are strictly due, just pick the ones with lowest mastery
-  if (dueTopics.length === 0) {
-    dueTopics = await prisma.topic.findMany({
-      where: { 
+  // 2. If empty, seed topics for this user and yearGroup, then fetch again
+  if (topics.length === 0) {
+    const { seedTopics } = await import('./seed');
+    await seedTopics(user.id, user.yearGroup);
+    topics = await prisma.topic.findMany({
+      where: {
         userId: user.id,
-        yearGroup: user.yearGroup 
+        yearGroup: user.yearGroup,
       },
-      orderBy: {
-        masteryLevel: 'asc'
-      },
-      take: 5
+      include: {
+        _count: {
+          select: { questionHistory: true }
+        }
+      }
     });
   }
 
-  const selectedTopic = dueTopics[Math.floor(Math.random() * dueTopics.length)];
+  if (topics.length === 0) {
+    throw new Error("No topics available even after seeding.");
+  }
+
+  // 3. Map and calculate priority score for each topic
+  const scoredTopics = topics.map(topic => {
+    const questionsCount = topic._count.questionHistory;
+    
+    // Weakness component: lower mastery = higher score (Max 1.0)
+    const weaknessScore = Math.max(0, 1.0 - topic.masteryLevel);
+    
+    // Novelty/Coverage component: fewer questions = higher score
+    const noveltyScore = 1.0 / (questionsCount + 1);
+    
+    // Combined score (weights: 60% weakness, 40% novelty)
+    const priorityScore = (weaknessScore * 0.6) + (noveltyScore * 0.4);
+    
+    return { topic, priorityScore };
+  });
+
+  // 4. Sort by priority score descending and pick from the top 3 to add variety
+  scoredTopics.sort((a, b) => b.priorityScore - a.priorityScore);
+  const topCandidates = scoredTopics.slice(0, 3);
+  const selectedTopic = topCandidates[Math.floor(Math.random() * topCandidates.length)].topic;
 
   return await generateQuestion(selectedTopic.name, {
     name: user.name,

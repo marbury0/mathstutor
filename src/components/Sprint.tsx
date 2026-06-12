@@ -133,7 +133,7 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
   }, [loadNextQuestion]);
 
   useEffect(() => {
-    if (isPaused || isFinished) return;
+    if (isPaused || isFinished || isLoading || !currentQuestion) return;
     if (timeLeft <= 0) {
       const timer = setTimeout(() => {
         handleFinalFinish();
@@ -146,7 +146,7 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isFinished, isPaused, handleFinalFinish]);
+  }, [timeLeft, isFinished, isPaused, isLoading, currentQuestion, handleFinalFinish]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

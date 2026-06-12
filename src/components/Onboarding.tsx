@@ -172,7 +172,7 @@ export default function Onboarding() {
                     key={y}
                     type="button"
                     onClick={() => setYearGroup(y)}
-                    className={`p-3 text-lg font-bold rounded-xl border-2 transition-all cursor-pointer ${
+                    className={`p-2 sm:p-3 text-base sm:text-lg font-bold rounded-xl border-2 transition-all cursor-pointer ${
                       yearGroup === y
                         ? 'bg-primary text-white border-primary-hover scale-105 shadow-md'
                         : 'bg-white text-slate-700 border-primary-bg hover:border-primary hover:scale-[1.02]'
