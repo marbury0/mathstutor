@@ -6,6 +6,7 @@ import EditProfileForm from '@/components/EditProfileForm';
 import TopicMasteryManager from '@/components/TopicMasteryManager';
 import RecentSprints from '@/components/RecentSprints';
 import ParentRewardsManager from '@/components/ParentRewardsManager';
+import WeeklyInsights from '@/components/WeeklyInsights';
 
 export default async function ParentDashboard() {
   const user = await getUser();
@@ -36,6 +37,8 @@ export default async function ParentDashboard() {
               <ParentRewardsManager initialRewards={rewards} />
 
               <TopicMasteryManager initialTopics={topics} />
+
+              <WeeklyInsights />
 
               <section className="bg-theme-card text-slate-900 p-6 rounded-2xl border-2 border-theme-border shadow-sm space-y-4">
                 <h2 className="text-xl font-bold text-slate-800 font-extrabold text-theme-title">Recent Sprints</h2>

@@ -254,3 +254,100 @@ export async function getAlternativeExplanation(
   const result = await model.generateContent(prompt);
   return cleanMathText(result.response.text());
 }
+
+export interface WeeklyInsightsData {
+  aiAnalysis: string;
+  recsPlan: string;
+  encouragement: string;
+}
+
+export async function generateWeeklyInsights(
+  profile: { name: string; age: number; yearGroup: number; tutorName: string },
+  metrics: { questionsCount: number; accuracy: number; pointsEarned: number; studyTime: number },
+  questionsList: { topic: string; isCorrect: boolean; questionText: string; userAnswer: string; correctAnswer: string; misconception: string | null; advice: string | null }[],
+  isTestMode = false
+): Promise<WeeklyInsightsData> {
+  if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
+    return {
+      aiAnalysis: `### Weekly Progress Summary for ${profile.name}\n\nThis week, ${profile.name} completed **${metrics.questionsCount} questions** across their math sprints with an overall accuracy of **${Math.round(metrics.accuracy)}%**.\n\nThey showed great dedication by practicing for **${Math.round(metrics.studyTime / 60)} minutes** and earning **${metrics.pointsEarned} points**.\n\nThey are doing fantastic!`,
+      recsPlan: `- **Consistent Practice**: Keep up the daily sprints to build fluency.\n- **Focus on Strengths**: Celebrate the topics where accuracy was high.`,
+      encouragement: `Great job this week, ${profile.name}! You've worked so hard on your math questions. Keep up the amazing work with ${profile.tutorName}! 🌟`
+    };
+  }
+
+  // Group questions by topic and count correctness/misconceptions
+  const topicSummary = questionsList.reduce((acc, q) => {
+    if (!acc[q.topic]) {
+      acc[q.topic] = { total: 0, correct: 0, misconceptions: [] as string[] };
+    }
+    acc[q.topic].total++;
+    if (q.isCorrect) {
+      acc[q.topic].correct++;
+    } else if (q.misconception) {
+      acc[q.topic].misconceptions.push(q.misconception);
+    }
+    return acc;
+  }, {} as Record<string, { total: number; correct: number; misconceptions: string[] }>);
+
+  const topicSummaryText = Object.entries(topicSummary)
+    .map(([topic, stats]) => {
+      const acc = Math.round((stats.correct / stats.total) * 100);
+      return `- **${topic}**: ${stats.correct}/${stats.total} correct (${acc}% accuracy). ${
+        stats.misconceptions.length > 0
+          ? `Struggles/Misconceptions: ${Array.from(new Set(stats.misconceptions)).join(", ")}`
+          : "No major misconceptions."
+      }`;
+    })
+    .join("\n");
+
+  const prompt = `
+    You are an expert UK Primary School Maths Tutor and Educational Consultant. 
+    Provide a professional, supportive, and detailed Weekly Progress Report and Insights for a parent about their child's math learning this week.
+    
+    Child Profile:
+    - Name: ${profile.name}
+    - Age: ${profile.age} (Year ${profile.yearGroup} in the UK Curriculum)
+    - Tutor AI Companion: ${profile.tutorName}
+    
+    Weekly Metrics:
+    - Questions Attempted: ${metrics.questionsCount}
+    - Overall Accuracy: ${Math.round(metrics.accuracy)}%
+    - Points Earned: ${metrics.pointsEarned}
+    - Total Practice Time: ${Math.round(metrics.studyTime / 60)} minutes
+    
+    Topic-by-Topic Performance and Diagnosed Errors:
+    ${topicSummaryText}
+    
+    Guidelines:
+    1. Write a warm, analytical "aiAnalysis" for the parent in markdown. Explain what they did well, diagnose their learning gaps (e.g. if they struggled with specific misconceptions like confusion of place value or operation), and explain it in simple parent-friendly terms.
+    2. Write a concrete, actionable "recsPlan" for the parent in markdown. Suggest 2-3 specific learning actions or fun real-world activities to do at home (e.g., cooking measurements, shopping calculations) to reinforce concepts they struggled with.
+    3. Write an encouraging, enthusiastic "encouragement" note directly to the child. Celebrate their efforts, mention their favorite tutor "${profile.tutorName}", and keep it short and exciting so a parent can read it aloud.
+    4. Keep the output 100% child-safe, encouraging, and free from any LaTeX syntax. Use standard symbols (e.g. %, +, -, *, /) and standard formatting.
+    
+    Return a JSON object with exactly these fields:
+    {
+      "aiAnalysis": "Markdown string containing the detailed analysis for parents...",
+      "recsPlan": "Markdown string containing the action plan...",
+      "encouragement": "Enthusiastic note to the child..."
+    }
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
+    const data = JSON.parse(jsonStr);
+    return {
+      aiAnalysis: cleanMathText(data.aiAnalysis),
+      recsPlan: cleanMathText(data.recsPlan),
+      encouragement: cleanMathText(data.encouragement),
+    };
+  } catch (error) {
+    console.error("Error generating weekly insights from AI:", error);
+    return {
+      aiAnalysis: `### Weekly Progress Summary for ${profile.name}\n\nThis week, ${profile.name} completed **${metrics.questionsCount} questions** across their math sprints with an overall accuracy of **${Math.round(metrics.accuracy)}%**.\n\nThey showed great dedication by practicing for **${Math.round(metrics.studyTime / 60)} minutes** and earning **${metrics.pointsEarned} points**.\n\nWe recommend continuing to practice active topics to build confidence!`,
+      recsPlan: `- **Consistent Practice**: Keep up the daily sprints to build fluency.\n- **Focus on Strengths**: Celebrate the topics where accuracy was high.`,
+      encouragement: `Fantastic work this week, ${profile.name}! You've worked so hard on your math questions. Keep shining and having fun in your next sprint with ${profile.tutorName}! 🌟`
+    };
+  }
+}
+

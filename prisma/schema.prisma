@@ -22,6 +22,7 @@ model User {
   sessions       Session[]
   topics         Topic[]
   rewards        Reward[]
+  weeklyInsights WeeklyInsight[]
 }
 
 model Topic {
@@ -74,5 +75,23 @@ model Reward {
   pendingApproval Boolean @default(false)
   createdAt    DateTime  @default(now())
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WeeklyInsight {
+  id             String   @id @default(cuid())
+  userId         String
+  weekStart      DateTime
+  weekEnd        DateTime
+  accuracy       Float
+  questionsCount Int
+  pointsEarned   Int
+  studyTime      Int      // in seconds
+  aiAnalysis     String   // AI markdown report
+  recsPlan       String   // AI action plan
+  encouragement  String   // AI kid note
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
 }
 
