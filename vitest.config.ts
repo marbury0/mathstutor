@@ -7,6 +7,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**', '**/.{idea,git,cache,output,temp}/**'],
+    fileParallelism: false,
+    maxWorkers: 1,
   },
   resolve: {
     alias: {

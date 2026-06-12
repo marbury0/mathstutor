@@ -19,6 +19,14 @@ export async function createUser(data: {
 }) {
   console.log('Creating user with data:', data);
   try {
+    // Default to recommended sprint duration in seconds:
+    let defaultDuration = 900; // 15 mins for Year 5-6
+    if (data.yearGroup <= 2) {
+      defaultDuration = 300;   // 5 mins for Year 1-2
+    } else if (data.yearGroup <= 4) {
+      defaultDuration = 600;   // 10 mins for Year 3-4
+    }
+
     const user = await prisma.user.create({
       data: {
         name: data.name,
@@ -29,6 +37,7 @@ export async function createUser(data: {
         avatar: data.avatar || "🐱",
         hobbies: JSON.stringify(data.hobbies),
         pets: JSON.stringify(data.pets),
+        sprintDuration: defaultDuration,
       },
     });
     console.log('User created successfully:', user.id);
@@ -50,7 +59,7 @@ export async function createUser(data: {
   }
   
   revalidatePath('/');
-  redirect('/');
+  return { success: true };
 }
 
 export async function getUser() {
@@ -93,6 +102,13 @@ export async function startNewProfileOnboarding() {
   revalidatePath('/');
 }
 
+export async function clearActiveUser() {
+  const cookieStore = await cookies();
+  cookieStore.delete('userId');
+  revalidatePath('/');
+}
+
+
 export async function updateUser(data: {
   name: string;
   age: number;
@@ -102,6 +118,7 @@ export async function updateUser(data: {
   tutorName?: string;
   theme?: string;
   avatar?: string;
+  sprintDuration?: number;
 }) {
   const user = await getUser();
   if (!user) throw new Error("No user found");
@@ -115,6 +132,7 @@ export async function updateUser(data: {
     tutorName?: string;
     theme?: string;
     avatar?: string;
+    sprintDuration?: number;
   } = {
     name: data.name,
     age: data.age,
@@ -135,6 +153,9 @@ export async function updateUser(data: {
   }
   if (data.avatar !== undefined) {
     updateData.avatar = data.avatar;
+  }
+  if (data.sprintDuration !== undefined) {
+    updateData.sprintDuration = data.sprintDuration;
   }
 
   await prisma.user.update({

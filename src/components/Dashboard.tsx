@@ -3,9 +3,10 @@
 import { useState, useTransition } from 'react';
 import Sprint from './Sprint';
 import Link from 'next/link';
-import { switchUser, startNewProfileOnboarding } from '@/app/actions/user';
+import { clearActiveUser } from '@/app/actions/user';
+import { requestTaskApproval } from '@/app/actions/rewards';
 import { useRouter } from 'next/navigation';
-import { Zap, Trophy, Flame, BarChart2, Sparkles } from 'lucide-react';
+import { Zap, Trophy, Flame, BarChart2, Sparkles, Gift, LogOut } from 'lucide-react';
 
 interface User {
   id: string;
@@ -14,9 +15,31 @@ interface User {
   yearGroup?: number;
   avatar?: string;
   tutorName?: string;
+  sprintDuration?: number | null;
 }
 
-export default function Dashboard({ user, allUsers = [], isTestMode = false }: { user: User; allUsers?: User[]; isTestMode?: boolean }) {
+interface Reward {
+  id: string;
+  title: string;
+  targetType: string;
+  targetValue: number;
+  currentValue: number;
+  unlocked: boolean;
+  claimed: boolean;
+  pendingApproval: boolean;
+}
+
+export default function Dashboard({
+  user,
+  allUsers = [],
+  isTestMode = false,
+  initialRewards = []
+}: {
+  user: User;
+  allUsers?: User[];
+  isTestMode?: boolean;
+  initialRewards?: Reward[];
+}) {
   const [isSprintActive, setIsSprintActive] = useState(false);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -25,10 +48,20 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
     setIsSprintActive(false);
   };
 
+  const handleRequestApproval = (rewardId: string) => {
+    startTransition(async () => {
+      try {
+        await requestTaskApproval(rewardId);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  };
+
   if (isSprintActive) {
     return (
       <div className="min-h-screen py-12 px-4">
-        <Sprint onFinish={handleSprintFinish} isTestMode={isTestMode} tutorName={user.tutorName || "Maths Bot"} />
+        <Sprint onFinish={handleSprintFinish} isTestMode={isTestMode} tutorName={user.tutorName || "Maths Bot"} sprintDuration={user.sprintDuration || 900} />
       </div>
     );
   }
@@ -51,31 +84,24 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
             <div className="text-xl md:text-2xl font-bold text-orange-600 whitespace-nowrap flex items-center gap-2">
               <Flame className="w-7 h-7 fill-orange-500 text-orange-600" /> {user.currentStreak} Day Streak
             </div>
-            <div className="flex items-center gap-2 bg-slate-100/90 px-3 py-2 rounded-2xl border border-slate-200 shadow-inner">
-              <span className="text-sm font-bold text-slate-500">Profile:</span>
-              <select
-                value={user.id}
-                disabled={isPending}
-                onChange={(e) => {
-                  const val = e.target.value;
+            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+              <div className="flex items-center gap-1.5 bg-slate-100/90 px-3 py-2 rounded-2xl border border-slate-200 shadow-inner text-sm font-extrabold text-slate-800">
+                <span className="text-slate-500 font-bold">Profile:</span>
+                <span>{user.name}</span>
+              </div>
+              <button
+                onClick={() => {
                   startTransition(async () => {
-                    if (val === 'new') {
-                      await startNewProfileOnboarding();
-                    } else {
-                      await switchUser(val);
-                    }
+                    await clearActiveUser();
                     router.refresh();
                   });
                 }}
-                className="bg-transparent font-extrabold text-slate-800 focus:outline-none cursor-pointer text-sm md:text-base pr-4"
+                disabled={isPending}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 p-2.5 rounded-2xl border border-slate-200 shadow-sm transition-all cursor-pointer flex items-center gap-1.5 text-sm font-bold"
+                title="Switch Profile"
               >
-                {allUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} (Yr {u.yearGroup})
-                  </option>
-                ))}
-                <option value="new" className="text-primary font-bold">➕ Add Profile...</option>
-              </select>
+                <LogOut className="w-4 h-4" /> Switch Profile
+              </button>
             </div>
           </div>
         </header>
@@ -110,6 +136,120 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
           </section>
         </div>
 
+        {initialRewards.filter(r => !r.claimed).length > 0 && (
+          <section className="bg-theme-card text-slate-900 p-6 rounded-3xl shadow-lg border-4 border-yellow-400/40 space-y-4">
+            <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+              <Gift className="w-7 h-7 text-yellow-500 fill-yellow-100" /> Goals & Rewards from Parents!
+            </h2>
+            <p className="text-sm text-slate-600 font-medium">Complete these learning goals set by your parents to unlock real-life rewards!</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {initialRewards.filter(r => !r.claimed).map((reward) => {
+                const percentage = Math.min(100, Math.round((reward.currentValue / reward.targetValue) * 100));
+                
+                // Get metric label
+                let metricLabel = '';
+                let unit = '';
+                switch (reward.targetType) {
+                  case 'QUESTIONS_ANSWERED':
+                    metricLabel = 'Correct Answers';
+                    unit = 'questions';
+                    break;
+                  case 'STREAK':
+                    metricLabel = 'Streak';
+                    unit = 'days';
+                    break;
+                  case 'SPRINTS_COMPLETED':
+                    metricLabel = 'Sprints Done';
+                    unit = 'sprints';
+                    break;
+                  case 'TOPICS_MASTERED':
+                    metricLabel = 'Mastered Topics';
+                    unit = 'topics';
+                                     case 'TIME_SPENT':
+                    metricLabel = 'Learning Time';
+                    unit = 'mins';
+                    break;
+                  case 'HIGH_SCORE':
+                    metricLabel = 'Best Sprint Score';
+                    unit = 'points';
+                    break;
+                  case 'CUSTOM_TASK':
+                    metricLabel = 'Outside Task';
+                    unit = 'times';
+                    break;
+                  default:
+                    metricLabel = 'Progress';
+                    unit = 'units';
+                }
+
+                return (
+                  <div
+                    key={reward.id}
+                    className={`p-4 rounded-2xl border-2 transition-all relative overflow-hidden ${
+                      reward.unlocked
+                        ? 'bg-emerald-50/70 border-emerald-400 shadow-md animate-pulse-subtle'
+                        : 'bg-white border-slate-200 hover:border-slate-350'
+                    }`}
+                  >
+                    {reward.unlocked && (
+                      <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl tracking-wider">
+                        Ready! 🌟
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <h4 className="font-extrabold text-slate-800 text-base flex items-center gap-1.5 pr-8">
+                        {reward.title}
+                      </h4>
+                      <div className="flex justify-between items-center text-xs font-bold text-slate-500">
+                        <span>{metricLabel}:</span>
+                        <span className="text-slate-800">
+                          {reward.currentValue} / {reward.targetValue} {unit}
+                        </span>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            reward.unlocked ? 'bg-emerald-500 animate-pulse' : 'bg-primary'
+                          }`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+
+                      {reward.unlocked ? (
+                        <p className="text-[11px] font-bold text-emerald-700 italic flex items-center gap-1 pt-1">
+                          🎉 Complete! Ask your parent for your reward!
+                        </p>
+                      ) : reward.targetType === 'CUSTOM_TASK' ? (
+                        reward.pendingApproval ? (
+                          <p className="text-[11px] font-semibold text-yellow-600 italic pt-1 flex items-center gap-1">
+                            ⏳ Waiting for parent to verify...
+                          </p>
+                        ) : (
+                          <div className="pt-2">
+                            <button
+                              onClick={() => handleRequestApproval(reward.id)}
+                              disabled={isPending}
+                              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-extrabold py-1.5 px-2.5 rounded-lg border border-slate-250 transition-all cursor-pointer text-center active:scale-95"
+                            >
+                              🙋‍♂️ I did this today! (Ask parent to verify)
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        <p className="text-[11px] font-semibold text-slate-400 italic pt-1">
+                          Keep going! Only {Math.max(0, reward.targetValue - reward.currentValue)} {unit} left.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <footer className="text-center pt-8">
           <Link href="/parent" className="text-primary text-sm hover:underline font-extrabold">
             Parental Controls & Dashboard
@@ -119,3 +259,4 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
     </main>
   );
 }
+

@@ -21,14 +21,14 @@ async function main() {
   const user = await prisma.user.upsert({
     where: { id: 'default-user' },
     update: {
-      avatar: '🐱'
+      avatar: '🦖'
     },
     create: {
       id: 'default-user',
       name: 'Tim',
       age: 10,
       yearGroup: 6,
-      avatar: '🐱',
+      avatar: '🦖',
       hobbies: JSON.stringify(['Painting']),
       pets: JSON.stringify([{ name: 'Bunny', type: 'Rabbit' }])
     }

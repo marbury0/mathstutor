@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { getUser, getAllUsers } from './actions/user';
+import { getRewards } from './actions/rewards';
 import Onboarding from '@/components/Onboarding';
 import Dashboard from '@/components/Dashboard';
 import ProfileSelection from '@/components/ProfileSelection';
@@ -26,9 +27,11 @@ export default async function Home() {
     );
   }
 
+  const rewards = await getRewards();
+
   return (
     <div className={themeClass}>
-      <Dashboard user={user} allUsers={allUsers} isTestMode={isTestMode} />
+      <Dashboard user={user} allUsers={allUsers} isTestMode={isTestMode} initialRewards={rewards} />
     </div>
   );
 }

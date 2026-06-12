@@ -28,8 +28,18 @@ export function normalizeAnswer(ans: string): string {
   return cleaned.toLowerCase();
 }
 
-export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Maths Bot' }: { onFinish: (score: number) => void; isTestMode?: boolean; tutorName?: string }) {
-  const [timeLeft, setTimeLeft] = useState(1200);
+export default function Sprint({
+  onFinish,
+  isTestMode = false,
+  tutorName = 'Maths Bot',
+  sprintDuration = 900
+}: {
+  onFinish: (score: number) => void;
+  isTestMode?: boolean;
+  tutorName?: string;
+  sprintDuration?: number;
+}) {
+  const [timeLeft, setTimeLeft] = useState(sprintDuration);
   const [isPaused, setIsPaused] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
@@ -43,7 +53,7 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
   const [isExplainingLoading, setIsExplainingLoading] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
-  const initialTime = useRef(1200);
+  const initialTime = useRef(sprintDuration);
 
   useEffect(() => {
     if (isTestMode) {
@@ -307,7 +317,7 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
 
             {showFullExplanation && (
               <div className="bg-primary-bg/40 p-6 rounded-xl border-2 border-primary/20 text-left space-y-4 animate-in zoom-in-95 relative overflow-hidden">
-                <p className="font-bold text-theme-title">Don&apos;t worry! Here&apos;s how to do it:</p>
+                <p className="font-bold text-theme-title text-base md:text-lg">Don&apos;t worry! Here&apos;s how to do it:</p>
                 
                 {isExplainingLoading ? (
                   <div className="py-6 flex flex-col items-center justify-center gap-3 text-slate-500 animate-in fade-in">
@@ -315,7 +325,7 @@ export default function Sprint({ onFinish, isTestMode = false, tutorName = 'Math
                     <p className="font-bold text-primary animate-pulse text-sm">{tutorName} is thinking of another way to explain this...</p>
                   </div>
                 ) : (
-                  <p className="text-slate-800 leading-relaxed">
+                  <p className="text-slate-800 leading-relaxed text-base md:text-lg font-medium">
                     {alternativeExplanation || currentQuestion.explanation}
                   </p>
                 )}

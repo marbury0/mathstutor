@@ -36,8 +36,13 @@ export default function Onboarding() {
     console.log('handleFinish called with difficulty:', startingDifficulty);
     setIsSubmitting(true);
     try {
-      await createUser({ name, age, yearGroup, hobbies, pets, startingDifficulty, tutorName: tutorName.trim(), theme, avatar });
-      console.log('handleFinish success');
+      const res = await createUser({ name, age, yearGroup, hobbies, pets, startingDifficulty, tutorName: tutorName.trim(), theme, avatar });
+      if (res?.success) {
+        console.log('handleFinish success');
+        window.location.href = '/';
+      } else {
+        throw new Error("Failed to create user");
+      }
     } catch (error) {
       console.error('Failed to save user:', error);
       setIsSubmitting(false);

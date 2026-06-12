@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { cookies, headers } from 'next/headers';
 import { diagnoseError } from '@/lib/ai';
 import { getUser } from './user';
+import { recalculateRewardProgress } from './rewards';
 
 export async function logQuestionResult(
   topicName: string, 
@@ -141,6 +142,8 @@ export async function logQuestionResult(
       },
     },
   });
+
+  await recalculateRewardProgress(user.id);
 }
 
 export async function finishSession(score: number, duration: number) {
@@ -183,5 +186,6 @@ export async function finishSession(score: number, duration: number) {
     });
   }
 
+  await recalculateRewardProgress(user.id);
   revalidatePath('/');
 }

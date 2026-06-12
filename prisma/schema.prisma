@@ -18,8 +18,10 @@ model User {
   pets           String?
   currentStreak  Int       @default(0)
   lastSprintDate DateTime?
+  sprintDuration Int       @default(900)
   sessions       Session[]
   topics         Topic[]
+  rewards        Reward[]
 }
 
 model Topic {
@@ -58,3 +60,19 @@ model QuestionHistory {
   answeredAt    DateTime @default(now())
   topic         Topic    @relation(fields: [topicId], references: [id])
 }
+
+model Reward {
+  id           String    @id @default(cuid())
+  userId       String
+  title        String
+  targetType   String    // 'QUESTIONS_ANSWERED', 'STREAK', 'SPRINTS_COMPLETED', 'MASTERY_LEVEL', 'TIME_SPENT'
+  targetValue  Float
+  currentValue Float     @default(0.0)
+  unlocked     Boolean   @default(false)
+  unlockedAt   DateTime?
+  claimed      Boolean   @default(false)
+  pendingApproval Boolean @default(false)
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+

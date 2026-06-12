@@ -13,6 +13,7 @@ interface User {
   tutorName?: string | null;
   theme?: string | null;
   avatar?: string | null;
+  sprintDuration?: number | null;
 }
 
 export default function EditProfileForm({ user }: { user: User }) {
@@ -22,6 +23,7 @@ export default function EditProfileForm({ user }: { user: User }) {
   const [tutorName, setTutorName] = useState(user.tutorName || 'Maths Bot');
   const [theme, setTheme] = useState(user.theme || 'ocean');
   const [avatar, setAvatar] = useState(user.avatar || '🐱');
+  const [sprintDuration, setSprintDuration] = useState(user.sprintDuration ? Math.round(user.sprintDuration / 60) : 15);
   
   const [hobbies, setHobbies] = useState<string[]>(() => {
     try {
@@ -87,7 +89,8 @@ export default function EditProfileForm({ user }: { user: User }) {
         pets,
         tutorName: tutorName.trim(),
         theme,
-        avatar
+        avatar,
+        sprintDuration: sprintDuration * 60,
       });
       setMessage({ text: 'Profile updated successfully! 🎉', type: 'success' });
       setTimeout(() => setMessage(null), 3000);
@@ -167,6 +170,24 @@ export default function EditProfileForm({ user }: { user: User }) {
               <option value="peach">Peach Melody 🍑</option>
             </select>
           </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Daily Sprint Time ⏱️</label>
+          <select
+            value={sprintDuration}
+            onChange={(e) => setSprintDuration(parseInt(e.target.value, 10))}
+            className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium cursor-pointer"
+            disabled={isSaving}
+          >
+            <option value={3}>3 minutes (Quick Test)</option>
+            <option value={5}>5 minutes (Recommended for Yr 1–2)</option>
+            <option value={10}>10 minutes (Recommended for Yr 3–4)</option>
+            <option value={15}>15 minutes (Recommended for Yr 5–6)</option>
+            <option value={20}>20 minutes</option>
+            <option value={25}>25 minutes</option>
+            <option value={30}>30 minutes</option>
+          </select>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

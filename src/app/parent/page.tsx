@@ -1,9 +1,11 @@
 import { getTopics, getSessionHistory, getUser } from '../actions/user';
+import { getRewards } from '../actions/rewards';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import EditProfileForm from '@/components/EditProfileForm';
 import TopicMasteryManager from '@/components/TopicMasteryManager';
 import RecentSprints from '@/components/RecentSprints';
+import ParentRewardsManager from '@/components/ParentRewardsManager';
 
 export default async function ParentDashboard() {
   const user = await getUser();
@@ -13,6 +15,7 @@ export default async function ParentDashboard() {
 
   const topics = await getTopics();
   const sessions = await getSessionHistory();
+  const rewards = await getRewards();
   const themeClass = user.theme === 'peach' ? 'theme-peach' : 'theme-ocean';
 
   return (
@@ -30,6 +33,8 @@ export default async function ParentDashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2 space-y-8">
+              <ParentRewardsManager initialRewards={rewards} />
+
               <TopicMasteryManager initialTopics={topics} />
 
               <section className="bg-theme-card text-slate-900 p-6 rounded-2xl border-2 border-theme-border shadow-sm space-y-4">
