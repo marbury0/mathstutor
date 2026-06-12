@@ -38,7 +38,7 @@ export default function Dashboard({ user, allUsers = [], isTestMode = false }: {
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-theme-card text-slate-900 p-6 rounded-2xl shadow-sm border-2 border-theme-border gap-4">
           <div className="flex items-center gap-4">
-            <span className="text-4xl">{user.avatar || '🐣'}</span>
+            <span className="text-4xl">{user.avatar || '🐱'}</span>
             <div>
               <h1 className="text-3xl font-extrabold text-theme-title flex items-center gap-2">
                 Welcome back, {user.name}!

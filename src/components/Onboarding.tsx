@@ -16,7 +16,7 @@ export default function Onboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tutorName, setTutorName] = useState('Maths Bot');
   const [theme, setTheme] = useState('ocean');
-  const [avatar, setAvatar] = useState('🐣');
+  const [avatar, setAvatar] = useState('🐱');
 
   const addHobby = () => {
     if (currentHobby.trim()) {
@@ -67,8 +67,8 @@ export default function Onboarding() {
             
             <div className="space-y-3 pt-2">
               <p className="text-lg text-slate-700 text-center font-bold">Pick your Avatar! 🦊</p>
-              <div className="grid grid-cols-5 gap-2.5 justify-items-center">
-                {['🐣', '🦊', '🐼', '🐨', '🦁', '🦄', '🐸', '🐯', '🦖', '🐱'].map((emoji) => (
+              <div className="flex flex-wrap gap-2.5 justify-center">
+                {['🐔', '🦊', '🐼', '🐨', '🐰', '🐸', '🦖', '🐱', '🐺', '🦘'].map((emoji) => (
                   <button
                     key={emoji}
                     type="button"
@@ -264,7 +264,7 @@ export default function Onboarding() {
                   onChange={(e) => setCurrentPetType(e.target.value)}
                   className="flex-1 p-4 text-lg border-2 border-primary/20 rounded-xl focus:border-primary outline-none text-slate-900 bg-white appearance-none cursor-pointer font-medium"
                 >
-                  {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse', 'Chicken'].map(type => (
+                  {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse', 'Chicken', 'Kangaroo'].map(type => (
                     <option key={type} value={type}>{type}</option>
                   ))}
                 </select>

@@ -20,17 +20,19 @@ async function main() {
   console.log('Start seeding...');
   const user = await prisma.user.upsert({
     where: { id: 'default-user' },
-    update: {},
+    update: {
+      avatar: '🐱'
+    },
     create: {
       id: 'default-user',
       name: 'Tim',
       age: 10,
       yearGroup: 6,
+      avatar: '🐱',
       hobbies: JSON.stringify(['Painting']),
       pets: JSON.stringify([{ name: 'Bunny', type: 'Rabbit' }])
     }
   });
-
   for (const [yearGroupStr, topics] of Object.entries(CURRICULUM)) {
     const yearGroup = parseInt(yearGroupStr, 10);
     for (const name of topics) {

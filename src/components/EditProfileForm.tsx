@@ -21,7 +21,7 @@ export default function EditProfileForm({ user }: { user: User }) {
   const [yearGroup, setYearGroup] = useState(user.yearGroup);
   const [tutorName, setTutorName] = useState(user.tutorName || 'Maths Bot');
   const [theme, setTheme] = useState(user.theme || 'ocean');
-  const [avatar, setAvatar] = useState(user.avatar || '🐣');
+  const [avatar, setAvatar] = useState(user.avatar || '🐱');
   
   const [hobbies, setHobbies] = useState<string[]>(() => {
     try {
@@ -123,7 +123,7 @@ export default function EditProfileForm({ user }: { user: User }) {
         <div className="space-y-1.5">
           <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Profile Avatar 🦊</label>
           <div className="flex flex-wrap gap-2 pt-0.5 justify-start">
-            {['🐣', '🦊', '🐼', '🐨', '🦁', '🦄', '🐸', '🐯', '🦖', '🐱'].map((emoji) => (
+            {['🐔', '🦊', '🐼', '🐨', '🐰', '🐸', '🦖', '🐱', '🐺', '🦘'].map((emoji) => (
               <button
                 key={emoji}
                 type="button"
@@ -271,7 +271,7 @@ export default function EditProfileForm({ user }: { user: User }) {
                 className="flex-1 p-2.5 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white text-sm font-medium cursor-pointer"
                 disabled={isSaving}
               >
-                {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse', 'Chicken'].map((type) => (
+                {['Dog', 'Cat', 'Hamster', 'Rabbit', 'Fish', 'Dragon', 'Horse', 'Chicken', 'Kangaroo'].map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>

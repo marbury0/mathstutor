@@ -26,7 +26,7 @@ export async function createUser(data: {
         yearGroup: data.yearGroup,
         tutorName: data.tutorName || "Maths Bot",
         theme: data.theme || "ocean",
-        avatar: data.avatar || "🐣",
+        avatar: data.avatar || "🐱",
         hobbies: JSON.stringify(data.hobbies),
         pets: JSON.stringify(data.pets),
       },
