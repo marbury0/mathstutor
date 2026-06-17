@@ -136,7 +136,7 @@ export async function generateQuestion(
     Return JSON:
     - reasoning: Internal calculation steps.
     - text: The word problem.
-    - answer: The numeric answer.
+    - answer: The final answer, including the appropriate unit or symbol if the question requires one (e.g., "5cm", "12m", "45°", "20%", "2.5kg", "£4.50"). Do not omit the unit. For length, area, volume, mass, capacity, percentage, or angle, append the unit directly. If no unit is applicable, return just the number.
     - explanation: How to solve it, using precise mathematical language.
     - visualHint: A simple visual representation of the problem setup using emojis to help the child visualize the objects and quantities (e.g. 🍎🍎 + 🍎 = ?). NEVER include the final answer, result, or completed equation. If there is a missing number, represent it with a question mark (?).
     - topic: Topic name.

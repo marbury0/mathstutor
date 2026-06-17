@@ -103,8 +103,8 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
 
     // 3. Edit profile to change name to 'Ethan Progressed', age to 10 (Year 6)
     await page.getByPlaceholder('Name...', { exact: true }).fill('Ethan Progressed');
-    await page.locator('select').nth(1).selectOption('10');
-    await page.locator('select').nth(2).selectOption('6');
+    await page.locator('select').nth(3).selectOption('10');
+    await page.locator('select').nth(4).selectOption('6');
     await page.getByRole('button', { name: 'Save Profile Changes' }).click();
 
     // 4. Verify success message
@@ -116,10 +116,10 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     // 6. Navigate back to Home and verify dashboard shows Year 6 details
     await page.getByRole('link', { name: 'Back to Tutor' }).click();
     await expect(page.getByRole('heading', { name: 'Welcome back, Ethan Progressed!' })).toBeVisible();
-    await expect(page.getByText('Year 6 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
+    await expect(page.getByText('Year 6 • Maths Bot is ready for your daily 20-minute maths sprint!')).toBeVisible();
   });
 
-  test('should allow editing child interests (hobbies/pets) and custom math topics', async ({ page }) => {
+  test('should allow editing child interests (hobbies/pets) and custom maths topics', async ({ page }) => {
     // 1. Onboard student as Year 5
     await page.goto('/');
     await page.getByPlaceholder('Your name...').fill('Chloe');
@@ -169,12 +169,13 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.getByRole('button', { name: 'Save Profile Changes' }).click();
     await expect(page.getByText('Profile updated successfully! 🎉')).toBeVisible();
 
-    // 7. Add a custom math topic
+    // 7. Add a custom maths topic
     await page.getByPlaceholder('e.g. Roman Numerals, Long Division...').fill('Custom Division');
     await page.getByRole('button', { name: 'Add Topic' }).click();
+    await page.getByText('Custom Division').first(); // wait...
     await expect(page.getByText('Custom Division')).toBeVisible();
 
-    // 8. Delete a math topic
+    // 8. Delete a maths topic
     // Set up dialog handler to accept deletion
     page.on('dialog', async (dialog) => {
       expect(dialog.message()).toContain('Are you sure you want to remove "Custom Division"?');

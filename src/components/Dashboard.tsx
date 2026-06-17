@@ -43,6 +43,7 @@ export default function Dashboard({
   const [isSprintActive, setIsSprintActive] = useState(false);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isSwitching, setIsSwitching] = useState(false);
 
   const handleSprintFinish = () => {
     setIsSprintActive(false);
@@ -77,7 +78,7 @@ export default function Dashboard({
                 Welcome back, {user.name}!
                 <Sparkles className="w-7 h-7 text-yellow-500 fill-yellow-400" />
               </h1>
-              <p className="text-slate-600 font-medium">Year {user.yearGroup || 5} • {user.tutorName || "Maths Bot"} is ready for your daily 20-minute math sprint!</p>
+              <p className="text-slate-600 font-medium">Year {user.yearGroup || 5} • {user.tutorName || "Maths Bot"} is ready for your daily 20-minute maths sprint!</p>
             </div>
           </div>
           <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
@@ -90,13 +91,17 @@ export default function Dashboard({
                 <span>{user.name}</span>
               </div>
               <button
-                onClick={() => {
-                  startTransition(async () => {
+                onClick={async () => {
+                  setIsSwitching(true);
+                  try {
                     await clearActiveUser();
-                    router.refresh();
-                  });
+                    window.location.href = '/';
+                  } catch (err) {
+                    setIsSwitching(false);
+                    console.error(err);
+                  }
                 }}
-                disabled={isPending}
+                disabled={isPending || isSwitching}
                 className="bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 p-2.5 rounded-2xl border border-slate-200 shadow-sm transition-all cursor-pointer flex items-center gap-1.5 text-sm font-bold"
                 title="Switch Profile"
               >

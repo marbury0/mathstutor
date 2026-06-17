@@ -13,6 +13,7 @@ export default async function Home() {
   const isTestMode = cookieStore.get('testMode')?.value === 'true';
 
   const themeClass = user?.theme === 'peach' ? 'theme-peach' : 'theme-ocean';
+  console.log('HOME_RENDER:', { userIdCookie, user: user?.name, allUsersCount: allUsers.length });
 
   if (!user) {
     const showOnboarding = userIdCookie === 'new' || allUsers.length === 0;

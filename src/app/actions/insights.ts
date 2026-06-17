@@ -136,7 +136,7 @@ export async function generateWeeklyInsightAction(weekStartStr: string, weekEndS
   });
 
   if (questions.length === 0) {
-    throw new Error("No math questions were answered in this week range. Complete some sprints first!");
+    throw new Error("No maths questions were answered in this week range. Complete some sprints first!");
   }
 
   // Calculate metrics

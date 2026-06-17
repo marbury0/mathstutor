@@ -20,7 +20,7 @@ test.describe('Student Dashboard & Navigation', () => {
 
   test('should display correct student profile in dashboard header', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Welcome back, Bobby!' })).toBeVisible();
-    await expect(page.getByText('Year 4 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
+    await expect(page.getByText('Year 4 • Maths Bot is ready for your daily 20-minute maths sprint!')).toBeVisible();
     await expect(page.getByText('0 Day Streak')).toBeVisible();
   });
 

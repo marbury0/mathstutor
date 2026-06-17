@@ -89,7 +89,7 @@ describe('Insights Server Actions', () => {
     const currentWeek = await getUTCWeekRange(new Date());
     await expect(
       generateWeeklyInsightAction(currentWeek.start.toISOString(), currentWeek.end.toISOString())
-    ).rejects.toThrow("No math questions were answered in this week range.");
+    ).rejects.toThrow("No maths questions were answered in this week range.");
   });
 
   it('should successfully generate and save weekly insights when data exists', async () => {

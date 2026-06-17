@@ -153,4 +153,24 @@ describe('Answer Normalization Helper', () => {
     expect(normalizeAnswer('5/8')).toBe('5/8');
     expect(normalizeAnswer('half')).toBe('half');
   });
+
+  it('should normalize and require units consistently', () => {
+    expect(normalizeAnswer('5 cm')).toBe('5cm');
+    expect(normalizeAnswer('5.0 centimeters')).toBe('5cm');
+    expect(normalizeAnswer('5.0 centimetres')).toBe('5cm');
+    expect(normalizeAnswer('45 degrees')).toBe('45°');
+    expect(normalizeAnswer('45°')).toBe('45°');
+    expect(normalizeAnswer('45 deg')).toBe('45°');
+    expect(normalizeAnswer('1.50 m')).toBe('1.5m');
+    expect(normalizeAnswer('1.50 metres')).toBe('1.5m');
+    expect(normalizeAnswer('20 percent')).toBe('20%');
+    expect(normalizeAnswer('5cm')).toBe('5cm');
+    expect(normalizeAnswer('200 millilitres')).toBe('200ml');
+    expect(normalizeAnswer('1.5 litres')).toBe('1.5l');
+    expect(normalizeAnswer('23 pence')).toBe('23p');
+    expect(normalizeAnswer('23p')).toBe('23p');
+    expect(normalizeAnswer('1 penny')).toBe('1p');
+    // Ensure unit-less answer doesn't match unit-ed answer
+    expect(normalizeAnswer('5')).not.toBe(normalizeAnswer('5 cm'));
+  });
 });

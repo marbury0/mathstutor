@@ -93,7 +93,7 @@ export default function TopicMasteryManager({ initialTopics }: { initialTopics: 
       </div>
 
       <form onSubmit={handleAdd} className="border-t pt-4 border-slate-100 space-y-2">
-        <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Add Custom Math Topic</label>
+        <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Add Custom Maths Topic</label>
         <div className="flex gap-2">
           <input
             type="text"

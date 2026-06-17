@@ -58,7 +58,7 @@ test.describe('Onboarding Flow & Form Validation', () => {
 
     // Arrive at Dashboard
     await expect(page.getByRole('heading', { name: 'Welcome back, Alex!' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Year 3 • Mathy is ready for your daily 20-minute math sprint!')).toBeVisible();
+    await expect(page.getByText('Year 3 • Mathy is ready for your daily 20-minute maths sprint!')).toBeVisible();
   });
 
   test('should complete onboarding with multiple hobbies and pets and seed Year 6 curriculum', async ({ page }) => {
@@ -106,6 +106,6 @@ test.describe('Onboarding Flow & Form Validation', () => {
 
     // Verify Dashboard displays correct info
     await expect(page.getByRole('heading', { name: 'Welcome back, Sophia!' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Year 6 • Maths Bot is ready for your daily 20-minute math sprint!')).toBeVisible();
+    await expect(page.getByText('Year 6 • Maths Bot is ready for your daily 20-minute maths sprint!')).toBeVisible();
   });
 });

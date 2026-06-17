@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useEffect } from 'react';
 import { switchUser, startNewProfileOnboarding } from '@/app/actions/user';
 import { useRouter } from 'next/navigation';
 import { UserPlus, Sparkles, GraduationCap } from 'lucide-react';
@@ -16,20 +16,33 @@ interface User {
 
 export default function ProfileSelection({ allUsers }: { allUsers: User[] }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  const handleSelectUser = (userId: string) => {
-    startTransition(async () => {
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const handleSelectUser = async (userId: string) => {
+    setIsPending(true);
+    try {
       await switchUser(userId);
-      router.refresh();
-    });
+      window.location.href = '/';
+    } catch (err) {
+      setIsPending(false);
+      console.error(err);
+    }
   };
 
-  const handleCreateProfile = () => {
-    startTransition(async () => {
+  const handleCreateProfile = async () => {
+    setIsPending(true);
+    try {
       await startNewProfileOnboarding();
-      router.refresh();
-    });
+      window.location.href = '/';
+    } catch (err) {
+      setIsPending(false);
+      console.error(err);
+    }
   };
 
   return (
@@ -43,7 +56,7 @@ export default function ProfileSelection({ allUsers }: { allUsers: User[] }) {
           <Sparkles className="w-8 h-8 text-yellow-500 fill-yellow-400 animate-pulse" />
         </h1>
         <p className="text-xl text-slate-700 font-medium max-w-md mx-auto">
-          Choose your profile to jump back into your math adventure!
+          Choose your profile to jump back into your maths adventure!
         </p>
       </header>
 
@@ -52,7 +65,7 @@ export default function ProfileSelection({ allUsers }: { allUsers: User[] }) {
           <button
             key={u.id}
             onClick={() => handleSelectUser(u.id)}
-            disabled={isPending}
+            disabled={isPending || !hydrated}
             className="group relative bg-white/95 backdrop-blur-sm p-8 rounded-3xl border-4 border-teal-100 hover:border-teal-400 hover:scale-105 hover:shadow-2xl transition-all duration-300 ease-out cursor-pointer flex flex-col items-center justify-center text-center space-y-4 focus:outline-none focus:ring-4 focus:ring-teal-300 disabled:opacity-50"
           >
             {/* Avatar container */}
@@ -80,7 +93,7 @@ export default function ProfileSelection({ allUsers }: { allUsers: User[] }) {
         {/* Add profile card */}
         <button
           onClick={handleCreateProfile}
-          disabled={isPending}
+          disabled={isPending || !hydrated}
           className="group bg-slate-50/80 hover:bg-white p-8 rounded-3xl border-4 border-dashed border-slate-300 hover:border-teal-400 hover:scale-105 hover:shadow-2xl transition-all duration-300 ease-out cursor-pointer flex flex-col items-center justify-center text-center space-y-4 focus:outline-none focus:ring-4 focus:ring-teal-300 disabled:opacity-50 min-h-[250px]"
         >
           <div className="w-24 h-24 bg-slate-100 group-hover:bg-teal-50 rounded-full border-2 border-dashed border-slate-300 group-hover:border-teal-200 flex items-center justify-center text-slate-500 group-hover:text-teal-600 transition-all duration-300">
@@ -92,7 +105,7 @@ export default function ProfileSelection({ allUsers }: { allUsers: User[] }) {
               Add Profile
             </h3>
             <p className="text-sm font-medium text-slate-500">
-              Create a new math tutor journey
+              Create a new maths tutor journey
             </p>
           </div>
         </button>

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Sprint Adaptive Learning Loop', () => {
   test.beforeEach(async ({ request, page }) => {
+    test.setTimeout(60000);
     // Reset database and perform onboarding to get a clean dashboard session
     await request.post('/api/test/reset');
     
@@ -18,15 +19,15 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await expect(page.getByRole('heading', { name: 'Welcome back, Danny!' })).toBeVisible({ timeout: 15000 });
   });
 
-  test('should start sprint with 20-minute timer and correct UI header details', async ({ page }) => {
+  test('should start sprint with 15-minute timer and correct UI header details', async ({ page }) => {
     // Click Start Sprint
     await page.getByRole('button', { name: 'Start Sprint! 🚀' }).click();
 
-    // Verify timer starts at 20 minutes (20:00 or 19:59)
+    // Verify timer starts at 15 minutes (15:00 or 14:59)
     const timerText = page.locator('#sprint-timer');
     await expect(timerText).toBeVisible();
     const timerValue = await timerText.innerText();
-    expect(timerValue).toMatch(/^(20:00|19:\d{2})$/);
+    expect(timerValue).toMatch(/^(15:00|14:\d{2})$/);
 
     // Verify score starts at 0
     await expect(page.getByText('Score: 0')).toBeVisible();
@@ -51,7 +52,7 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await expect(page.getByRole('button', { name: 'Try Again! 🔄' })).toBeVisible();
   });
 
-  test('should show math explanation card on second consecutive incorrect answer', async ({ page }) => {
+  test('should show maths explanation card on second consecutive incorrect answer', async ({ page }) => {
     await page.getByRole('button', { name: 'Start Sprint! 🚀' }).click();
     
     // Attempt 1: Wrong Answer

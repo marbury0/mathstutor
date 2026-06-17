@@ -13,19 +13,42 @@ interface Question {
   visualHint: string;
 }
 
-/**
- * Normalizes answer strings to handle currency symbols, spaces, case-insensitivity, 
- * and numeric formats (like 5.0 vs 5).
- */
 export function normalizeAnswer(ans: string): string {
   if (!ans) return "";
+  
+  // 1. Remove currency symbols and trim whitespace
   let cleaned = ans.replace(/[£$€¥]/g, "").trim();
   cleaned = cleaned.replace(/\s+/g, "");
-  const num = Number(cleaned);
-  if (!isNaN(num) && cleaned !== "") {
-    return String(num);
+  
+  // 2. Standardize units and lowercase
+  cleaned = cleaned.toLowerCase()
+    .replace(/degrees?|deg/g, "°")
+    .replace(/squarecentimet(er|re)s?|cm\^?2/g, "cm²")
+    .replace(/squaremet(er|re)s?|m\^?2/g, "m²")
+    .replace(/cubiccentimet(er|re)s?|cm\^?3/g, "cm³")
+    .replace(/cubicmet(er|re)s?|m\^?3/g, "m³")
+    .replace(/centimet(er|re)s?|cms/g, "cm")
+    .replace(/millimet(er|re)s?|mms/g, "mm")
+    .replace(/kilomet(er|re)s?|kms/g, "km")
+    .replace(/met(er|re)s?|ms/g, "m")
+    .replace(/kilograms?|kgs/g, "kg")
+    .replace(/grams?|gs/g, "g")
+    .replace(/millilit(er|re)s?|mls/g, "ml")
+    .replace(/lit(er|re)s?/g, "l")
+    .replace(/percent(age)?/g, "%")
+    .replace(/pence|penn(y|ies)/g, "p");
+
+  // 3. Normalize the numeric prefix if present (e.g., "5.0cm" -> "5cm", "12.50" -> "12.5")
+  const match = cleaned.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
+  if (match) {
+    const numPart = Number(match[1]);
+    const unitPart = match[2];
+    if (!isNaN(numPart)) {
+      return String(numPart) + unitPart;
+    }
   }
-  return cleaned.toLowerCase();
+
+  return cleaned;
 }
 
 export default function Sprint({
@@ -170,7 +193,19 @@ export default function Sprint({
       const normalizedUser = normalizeAnswer(userAnswer);
       const normalizedCorrect = normalizeAnswer(currentQuestion.answer);
 
-      if (normalizedUser === normalizedCorrect) {
+      // Check if they match directly, or if the numeric parts match and user omitted the unit
+      const isNumericMatch = (() => {
+        const userNumMatch = normalizedUser.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
+        const correctNumMatch = normalizedCorrect.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
+        if (userNumMatch && correctNumMatch) {
+          const [_, userNum, userUnit] = userNumMatch;
+          const [__, correctNum, correctUnit] = correctNumMatch;
+          return Number(userNum) === Number(correctNum) && (userUnit === correctUnit || userUnit === "" || correctUnit === "");
+        }
+        return false;
+      })();
+
+      if (normalizedUser === normalizedCorrect || isNumericMatch) {
         await logQuestionResult(
           currentQuestion.topic,
           true,

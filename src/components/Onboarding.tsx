@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createUser } from '@/app/actions/user';
 
 export default function Onboarding() {
@@ -17,6 +17,11 @@ export default function Onboarding() {
   const [tutorName, setTutorName] = useState('Maths Bot');
   const [theme, setTheme] = useState('ocean');
   const [avatar, setAvatar] = useState('🐱');
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const addHobby = () => {
     if (currentHobby.trim()) {
@@ -64,7 +69,8 @@ export default function Onboarding() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full p-4 text-xl border-2 border-theme-border rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium text-center"
+                disabled={!hydrated}
+                className="w-full p-4 text-xl border-2 border-theme-border rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium text-center disabled:opacity-50"
                 placeholder="Your name..."
                 autoFocus
               />
@@ -98,7 +104,8 @@ export default function Onboarding() {
                   alert('Please type your name first! 😊');
                 }
               }}
-              className="w-full bg-primary hover:bg-primary-hover hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-xl transition-all cursor-pointer shadow-md mt-2"
+              disabled={!hydrated}
+              className="w-full bg-primary hover:bg-primary-hover hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-xl text-xl transition-all cursor-pointer shadow-md mt-2 disabled:opacity-50"
             >
               Next! 🚀
             </button>

@@ -6,6 +6,8 @@ import { cookies, headers } from 'next/headers';
 import { diagnoseError } from '@/lib/ai';
 import { getUser } from './user';
 import { recalculateRewardProgress } from './rewards';
+import { exec } from 'child_process';
+import path from 'path';
 
 export async function logQuestionResult(
   topicName: string, 
@@ -187,5 +189,22 @@ export async function finishSession(score: number, duration: number) {
   }
 
   await recalculateRewardProgress(user.id);
+
+  // Trigger database backup in the background (skip during tests)
+  if (process.env.NODE_ENV !== 'test') {
+    try {
+      const scriptPath = path.join(process.cwd(), 'backup-db.sh');
+      exec(`bash "${scriptPath}" backup`, (error, stdout) => {
+        if (error) {
+          console.error(`Automatic backup failed: ${error.message}`);
+        } else {
+          console.log(`Automatic backup completed: ${stdout.trim()}`);
+        }
+      });
+    } catch (backupErr) {
+      console.error("Failed to initiate automatic backup:", backupErr);
+    }
+  }
+
   revalidatePath('/');
 }
