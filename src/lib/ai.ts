@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ 
+const model = genAI.getGenerativeModel({
   model: "gemini-3.5-flash",
   safetySettings: [
     {
@@ -106,7 +106,7 @@ export async function generateQuestion(
   const age = profile.age;
   const petsList = profile.pets.map(p => `${p.name} the ${p.type}`).join(", ");
   const tutorName = profile.tutorName || "Maths Bot";
-  
+
   if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
     return {
       topic,
@@ -119,7 +119,7 @@ export async function generateQuestion(
     };
   }
 
-  
+
   const prompt = `
     You are an expert UK Primary School Maths Tutor. Your name is "${tutorName}".
     Generate a word problem for "${topic}" (Year ${profile.yearGroup}, Age ${age}).
@@ -139,7 +139,7 @@ export async function generateQuestion(
     - reasoning: Internal calculation steps.
     - text: The word problem.
     - answer: The final answer, including the appropriate unit or symbol if the question requires one (e.g., "5cm", "12m", "45°", "20%", "2.5kg", "£4.50"). Do not omit the unit. For length, area, volume, mass, capacity, percentage, or angle, append the unit directly. If no unit is applicable, return just the number.
-    - acceptableAnswers: An array of strings containing different acceptable formats or equivalent representations of the final answer (e.g., if the answer is "5cm", include ["5cm", "5 cm", "5", "5 centimeters", "5 centimetres"]. If it is "5 bricks", include ["5", "5 bricks", "5 lego bricks"]. If it is "1/2", include ["1/2", "0.5", "half", "0.50", "50%"]. If it is currency like "£4.50", include ["£4.50", "4.50", "4.5", "£4.5"]). Ensure it handles spelling variations, equivalent fractions, decimal/percent equivalents, alternate unit spacing, and context-specific unit variations (e.g. unitless vs with unit).
+    - acceptableAnswers: An array of strings containing different acceptable formats or equivalent representations of the final answer (e.g., if the answer is "5cm", include ["5cm", "5 cm", "5", "5 centimetres"]. If it is "5 bricks", include ["5", "5 bricks", "5 lego bricks"]. If it is "1/2", include ["1/2", "0.5", "half", "0.50", "50%"]. If it is currency like "£4.50", include ["£4.50", "4.50", "4.5", "£4.5"]). Ensure it handles spelling variations, equivalent fractions, decimal/percent equivalents, alternate unit spacing, and context-specific unit variations (e.g. unitless vs with unit).
     - explanation: How to solve it, using precise mathematical language.
     - visualHint: A simple visual representation of the problem setup using emojis to help the child visualize the objects and quantities (e.g. 🍎🍎 + 🍎 = ?). NEVER include the final answer, result, or completed equation. If there is a missing number, represent it with a question mark (?).
     - topic: Topic name.
@@ -151,7 +151,7 @@ export async function generateQuestion(
     const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
     const data = JSON.parse(jsonStr);
     data.answer = String(data.answer); // Force to string to prevent client-side .trim() crashes if model outputs a number
-    
+
     const questionData = data as QuestionData;
     questionData.text = cleanMathText(questionData.text);
     questionData.explanation = cleanMathText(questionData.explanation);
@@ -300,11 +300,10 @@ export async function generateWeeklyInsights(
   const topicSummaryText = Object.entries(topicSummary)
     .map(([topic, stats]) => {
       const acc = Math.round((stats.correct / stats.total) * 100);
-      return `- **${topic}**: ${stats.correct}/${stats.total} correct (${acc}% accuracy). ${
-        stats.misconceptions.length > 0
+      return `- **${topic}**: ${stats.correct}/${stats.total} correct (${acc}% accuracy). ${stats.misconceptions.length > 0
           ? `Struggles/Misconceptions: ${Array.from(new Set(stats.misconceptions)).join(", ")}`
           : "No major misconceptions."
-      }`;
+        }`;
     })
     .join("\n");
 
