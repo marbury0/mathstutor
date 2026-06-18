@@ -8,6 +8,7 @@ import { Timer, Pause, Play, LogOut, Trophy, HelpCircle, ArrowRight, RotateCcw, 
 interface Question {
   text: string;
   answer: string;
+  acceptableAnswers?: string[];
   explanation: string;
   topic: string;
   visualHint: string;
@@ -205,7 +206,27 @@ export default function Sprint({
         return false;
       })();
 
-      if (normalizedUser === normalizedCorrect || isNumericMatch) {
+      // Also check against acceptableAnswers array if present
+      const isAcceptableMatch = (() => {
+        if (currentQuestion.acceptableAnswers && Array.isArray(currentQuestion.acceptableAnswers)) {
+          return currentQuestion.acceptableAnswers.some(ans => {
+            const normalizedAcceptable = normalizeAnswer(ans);
+            if (normalizedUser === normalizedAcceptable) return true;
+
+            const userNumMatch = normalizedUser.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
+            const acceptableNumMatch = normalizedAcceptable.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
+            if (userNumMatch && acceptableNumMatch) {
+              const [_, userNum, userUnit] = userNumMatch;
+              const [__, accNum, accUnit] = acceptableNumMatch;
+              return Number(userNum) === Number(accNum) && (userUnit === accUnit || userUnit === "" || accUnit === "");
+            }
+            return false;
+          });
+        }
+        return false;
+      })();
+
+      if (normalizedUser === normalizedCorrect || isNumericMatch || isAcceptableMatch) {
         await logQuestionResult(
           currentQuestion.topic,
           true,

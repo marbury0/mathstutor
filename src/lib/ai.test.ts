@@ -26,4 +26,11 @@ describe('AI Tutor Personalization (tutorName)', () => {
     const explanation = await getAlternativeExplanation('What is 2 + 2?', 'Since 2 and 2 is 4', 'Sarah', 'Professor Math', true);
     expect(explanation).toContain('explains Professor Math');
   });
+
+  it('should include acceptableAnswers array in generateQuestion output when isTestMode is true', async () => {
+    const question = await generateQuestion('Addition', testProfile, true);
+    expect(question.acceptableAnswers).toBeDefined();
+    expect(Array.isArray(question.acceptableAnswers)).toBe(true);
+    expect(question.acceptableAnswers).toContain('4');
+  });
 });

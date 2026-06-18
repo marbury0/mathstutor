@@ -85,12 +85,13 @@ async function validateMath(question: string, reportedAnswer: string): Promise<b
     return false;
   }
   const rawResponse = result.response.text().toUpperCase();
-  return rawResponse.includes("YES") && !rawResponse.includes("NOT CORRECT") && !rawResponse.includes("INCORRECT") && !rawResponse.includes("NO");
+  return rawResponse.includes("YES") && !rawResponse.includes("NOT CORRECT") && !rawResponse.includes("INCORRECT") && !/\bNO\b/.test(rawResponse);
 }
 
 export interface QuestionData {
   text: string;
   answer: string;
+  acceptableAnswers: string[]; // List of alternative correct answers
   explanation: string;
   topic: string;
   reasoning: string;
@@ -111,6 +112,7 @@ export async function generateQuestion(
       topic,
       text: `Mock Year ${profile.yearGroup} question for ${profile.name} who likes ${profile.hobbies.join(", ")} and has pets: ${petsList}. What is 2 + 2?`,
       answer: "4",
+      acceptableAnswers: ["4", "four"],
       explanation: `Since 2 + 2 equals 4, the answer is 4, explains ${tutorName}.`,
       reasoning: "2 + 2 = 4",
       visualHint: "🍎🍎 + 🍎🍎 = ?"
@@ -137,6 +139,7 @@ export async function generateQuestion(
     - reasoning: Internal calculation steps.
     - text: The word problem.
     - answer: The final answer, including the appropriate unit or symbol if the question requires one (e.g., "5cm", "12m", "45°", "20%", "2.5kg", "£4.50"). Do not omit the unit. For length, area, volume, mass, capacity, percentage, or angle, append the unit directly. If no unit is applicable, return just the number.
+    - acceptableAnswers: An array of strings containing different acceptable formats or equivalent representations of the final answer (e.g., if the answer is "5cm", include ["5cm", "5 cm", "5", "5 centimeters", "5 centimetres"]. If it is "5 bricks", include ["5", "5 bricks", "5 lego bricks"]. If it is "1/2", include ["1/2", "0.5", "half", "0.50", "50%"]. If it is currency like "£4.50", include ["£4.50", "4.50", "4.5", "£4.5"]). Ensure it handles spelling variations, equivalent fractions, decimal/percent equivalents, alternate unit spacing, and context-specific unit variations (e.g. unitless vs with unit).
     - explanation: How to solve it, using precise mathematical language.
     - visualHint: A simple visual representation of the problem setup using emojis to help the child visualize the objects and quantities (e.g. 🍎🍎 + 🍎 = ?). NEVER include the final answer, result, or completed equation. If there is a missing number, represent it with a question mark (?).
     - topic: Topic name.
@@ -154,6 +157,11 @@ export async function generateQuestion(
     questionData.explanation = cleanMathText(questionData.explanation);
     questionData.visualHint = cleanMathText(questionData.visualHint);
     questionData.reasoning = cleanMathText(questionData.reasoning);
+    if (Array.isArray(questionData.acceptableAnswers)) {
+      questionData.acceptableAnswers = questionData.acceptableAnswers.map(ans => cleanMathText(String(ans)));
+    } else {
+      questionData.acceptableAnswers = [];
+    }
 
     // GUARDRAIL: Cross-validate the math before returning
     const isValid = await validateMath(questionData.text, questionData.answer);
