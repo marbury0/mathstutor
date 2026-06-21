@@ -33,6 +33,7 @@ model Topic {
   masteryLevel    Float             @default(0.0)
   difficultyLevel Int               @default(3)
   nextReviewDate  DateTime          @default(now())
+  masteredAt      DateTime?
   questionHistory QuestionHistory[]
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 

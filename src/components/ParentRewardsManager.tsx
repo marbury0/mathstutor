@@ -21,6 +21,7 @@ export default function ParentRewardsManager({ initialRewards }: { initialReward
   const [targetValue, setTargetValue] = useState(10);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   const metricOptions = [
     { value: 'QUESTIONS_ANSWERED', label: 'Correct Questions Answered', icon: CheckCircle2, unit: 'questions' },
@@ -179,136 +180,224 @@ export default function ParentRewardsManager({ initialRewards }: { initialReward
 
       {/* Rewards List */}
       <div className="space-y-4">
-        <h3 className="text-sm font-extrabold text-slate-700">Active Reward Goals ({initialRewards.filter(r => !r.claimed).length})</h3>
-        {initialRewards.length === 0 ? (
-          <div className="text-center py-8 bg-slate-50/20 border border-dashed border-slate-200 rounded-xl text-slate-400 italic text-sm">
-            No rewards created yet. Use the form above to motivate your child!
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {initialRewards.map((reward) => {
-              const option = metricOptions.find(opt => opt.value === reward.targetType) || metricOptions[0];
-              const Icon = option.icon;
-              const percentage = Math.min(100, Math.round((reward.currentValue / reward.targetValue) * 100));
+        {(() => {
+          const activeRewards = initialRewards.filter((r) => !r.claimed);
+          const archivedRewards = initialRewards.filter((r) => r.claimed);
 
-              return (
-                <div key={reward.id} className="space-y-2">
-                  <div
-                    className={`p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
-                      reward.claimed
-                        ? 'bg-slate-50 border-slate-200 opacity-60'
-                        : reward.unlocked
-                        ? 'bg-emerald-50/60 border-emerald-300 shadow-sm'
-                        : 'bg-white border-slate-200 hover:border-slate-350'
-                    }`}
-                  >
-                    <div className="flex-1 space-y-2 w-full">
-                      <div className="flex items-start md:items-center justify-between gap-2">
-                        <div>
-                          <h4 className="font-extrabold text-slate-800 text-base flex flex-wrap items-center gap-1.5">
-                            {reward.title}
-                            {reward.unlocked && !reward.claimed && (
-                              <span className="bg-emerald-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider animate-bounce">
-                                Unlocked! 🌟
-                              </span>
+          return (
+            <>
+              <h3 className="text-sm font-extrabold text-slate-700">
+                Active Reward Goals ({activeRewards.length})
+              </h3>
+              {activeRewards.length === 0 ? (
+                <div className="text-center py-8 bg-slate-50/20 border border-dashed border-slate-200 rounded-xl text-slate-400 italic text-sm">
+                  No active rewards. Use the form above to motivate your child!
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeRewards.map((reward) => {
+                    const option =
+                      metricOptions.find((opt) => opt.value === reward.targetType) ||
+                      metricOptions[0];
+                    const Icon = option.icon;
+                    const percentage = Math.min(
+                      100,
+                      Math.round((reward.currentValue / reward.targetValue) * 100)
+                    );
+
+                    return (
+                      <div key={reward.id} className="space-y-2">
+                        <div
+                          className={`p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                            reward.unlocked
+                              ? 'bg-emerald-50/60 border-emerald-300 shadow-sm'
+                              : 'bg-white border-slate-200 hover:border-slate-350'
+                          }`}
+                        >
+                          <div className="flex-1 space-y-2 w-full">
+                            <div className="flex items-start md:items-center justify-between gap-2">
+                              <div>
+                                <h4 className="font-extrabold text-slate-800 text-base flex flex-wrap items-center gap-1.5">
+                                  {reward.title}
+                                  {reward.unlocked && (
+                                    <span className="bg-emerald-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider animate-bounce">
+                                      Unlocked! 🌟
+                                    </span>
+                                  )}
+                                  {reward.pendingApproval && !reward.unlocked && (
+                                    <span className="bg-yellow-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider flex items-center gap-1">
+                                      <AlertCircle className="w-3 h-3" /> Needs Check
+                                    </span>
+                                  )}
+                                </h4>
+                                <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mt-0.5">
+                                  <Icon className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>
+                                    Goal: {reward.targetValue} {option.unit} ({option.label})
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right text-xs font-bold text-slate-700 whitespace-nowrap">
+                                {reward.currentValue} / {reward.targetValue} ({percentage}%)
+                              </div>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  reward.unlocked ? 'bg-emerald-500' : 'bg-primary'
+                                }`}
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end md:self-center">
+                            {reward.targetType === 'CUSTOM_TASK' && !reward.unlocked && (
+                              <button
+                                onClick={() => handleApproveProgress(reward.id)}
+                                disabled={isPending}
+                                className="bg-primary-bg hover:bg-primary/20 text-primary text-xs font-bold px-3 py-2 rounded-xl border border-primary/20 transition-all cursor-pointer shadow-sm"
+                                title="Add 1 Progress Manually"
+                              >
+                                +1 Progress
+                              </button>
                             )}
-                            {reward.claimed && (
-                              <span className="bg-slate-200 text-slate-600 text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">
-                                Claimed
-                              </span>
+                            {reward.unlocked && (
+                              <button
+                                onClick={() => handleClaimReward(reward.id)}
+                                disabled={isPending}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md hover:scale-[1.02] active:scale-95"
+                              >
+                                <CheckCircle2 className="w-4 h-4" /> Mark Claimed
+                              </button>
                             )}
-                            {reward.pendingApproval && !reward.unlocked && (
-                              <span className="bg-yellow-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" /> Needs Check
-                              </span>
-                            )}
-                          </h4>
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mt-0.5">
-                            <Icon className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Goal: {reward.targetValue} {option.unit} ({option.label})</span>
+                            <button
+                              onClick={() => handleDeleteReward(reward.id)}
+                              disabled={isPending}
+                              className="text-slate-400 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-all cursor-pointer"
+                              title="Delete Goal"
+                            >
+                              <Trash2 className="w-4.5 h-4.5" />
+                            </button>
                           </div>
                         </div>
-                        <div className="text-right text-xs font-bold text-slate-700 whitespace-nowrap">
-                          {reward.currentValue} / {reward.targetValue} ({percentage}%)
-                        </div>
-                      </div>
 
-                      {/* Progress Bar */}
-                      <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            reward.claimed
-                              ? 'bg-slate-400'
-                              : reward.unlocked
-                              ? 'bg-emerald-500'
-                              : 'bg-primary'
-                          }`}
-                          style={{ width: `${percentage}%` }}
-                        />
+                        {/* Pending Approval Panel */}
+                        {reward.pendingApproval && !reward.unlocked && (
+                          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-3 flex flex-col sm:flex-row justify-between items-center gap-3 animate-in slide-in-from-top-2">
+                            <div className="text-xs font-bold text-yellow-800 flex items-center gap-1.5">
+                              <AlertCircle className="w-4.5 h-4.5 text-yellow-600 fill-yellow-100" />
+                              <span>Child marked this task as done and requested a progress check!</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleApproveProgress(reward.id)}
+                                disabled={isPending}
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shadow cursor-pointer transition-all hover:scale-[1.01]"
+                              >
+                                Confirm (+1 Progress)
+                              </button>
+                              <button
+                                onClick={() => handleRejectApproval(reward.id)}
+                                disabled={isPending}
+                                className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer"
+                              >
+                                Ignore
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end md:self-center">
-                      {reward.targetType === 'CUSTOM_TASK' && !reward.unlocked && (
-                        <button
-                          onClick={() => handleApproveProgress(reward.id)}
-                          disabled={isPending}
-                          className="bg-primary-bg hover:bg-primary/20 text-primary text-xs font-bold px-3 py-2 rounded-xl border border-primary/20 transition-all cursor-pointer shadow-sm"
-                          title="Add 1 Progress Manually"
-                        >
-                          +1 Progress
-                        </button>
-                      )}
-                      {reward.unlocked && !reward.claimed && (
-                        <button
-                          onClick={() => handleClaimReward(reward.id)}
-                          disabled={isPending}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md hover:scale-[1.02] active:scale-95"
-                        >
-                          <CheckCircle2 className="w-4 h-4" /> Mark Claimed
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteReward(reward.id)}
-                        disabled={isPending}
-                        className="text-slate-400 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-all cursor-pointer"
-                        title="Delete Goal"
-                      >
-                        <Trash2 className="w-4.5 h-4.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Pending Approval Panel */}
-                  {reward.pendingApproval && !reward.unlocked && (
-                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-3 flex flex-col sm:flex-row justify-between items-center gap-3 animate-in slide-in-from-top-2">
-                      <div className="text-xs font-bold text-yellow-800 flex items-center gap-1.5">
-                        <AlertCircle className="w-4.5 h-4.5 text-yellow-600 fill-yellow-100" />
-                        <span>Child marked this task as done and requested a progress check!</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleApproveProgress(reward.id)}
-                          disabled={isPending}
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shadow cursor-pointer transition-all hover:scale-[1.01]"
-                        >
-                          Confirm (+1 Progress)
-                        </button>
-                        <button
-                          onClick={() => handleRejectApproval(reward.id)}
-                          disabled={isPending}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer"
-                        >
-                          Ignore
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        )}
+              )}
+
+              {/* Archived Rewards Toggle & List */}
+              <div className="pt-4 border-t border-slate-200 space-y-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
+                >
+                  <span>{showArchived ? '▼' : '▶'} Archived & Claimed Rewards ({archivedRewards.length})</span>
+                </button>
+
+                {showArchived && (
+                  <div className="space-y-3 animate-in fade-in duration-200">
+                    {archivedRewards.length === 0 ? (
+                      <div className="text-center py-6 bg-slate-50/20 border border-dashed border-slate-200 rounded-xl text-slate-400 italic text-sm">
+                        No claimed rewards yet.
+                      </div>
+                    ) : (
+                      archivedRewards.map((reward) => {
+                        const option =
+                          metricOptions.find((opt) => opt.value === reward.targetType) ||
+                          metricOptions[0];
+                        const Icon = option.icon;
+                        const percentage = Math.min(
+                          100,
+                          Math.round((reward.currentValue / reward.targetValue) * 100)
+                        );
+
+                        return (
+                          <div key={reward.id} className="space-y-2">
+                            <div
+                              className="p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 border-slate-200 opacity-70"
+                            >
+                              <div className="flex-1 space-y-2 w-full">
+                                <div className="flex items-start md:items-center justify-between gap-2">
+                                  <div>
+                                    <h4 className="font-extrabold text-slate-700 text-base flex flex-wrap items-center gap-1.5 line-through">
+                                      {reward.title}
+                                      <span className="bg-slate-200 text-slate-600 text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider no-underline">
+                                        Claimed
+                                      </span>
+                                    </h4>
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mt-0.5">
+                                      <Icon className="w-3.5 h-3.5 text-slate-400" />
+                                      <span>
+                                        Goal: {reward.targetValue} {option.unit} ({option.label})
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-right text-xs font-bold text-slate-650 whitespace-nowrap">
+                                    {reward.currentValue} / {reward.targetValue} ({percentage}%)
+                                  </div>
+                                </div>
+
+                                {/* Progress Bar */}
+                                <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-500 bg-slate-400"
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 self-end md:self-center">
+                                <button
+                                  onClick={() => handleDeleteReward(reward.id)}
+                                  disabled={isPending}
+                                  className="text-slate-400 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-all cursor-pointer"
+                                  title="Delete Goal"
+                                >
+                                  <Trash2 className="w-4.5 h-4.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </div>
     </section>
   );

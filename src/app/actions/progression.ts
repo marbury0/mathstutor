@@ -125,11 +125,22 @@ export async function logQuestionResult(
     }
   }
 
+  // Determine if mastery status transitioned
+  const isNowMastered = newMastery >= 0.8;
+  const wasMasteredBefore = topic.masteryLevel >= 0.8;
+  let masteredAt: Date | null = topic.masteredAt;
+  if (isNowMastered && !wasMasteredBefore) {
+    masteredAt = new Date();
+  } else if (!isNowMastered && wasMasteredBefore) {
+    masteredAt = null;
+  }
+
   await prisma.topic.update({
     where: { id: topic.id },
     data: {
       masteryLevel: newMastery,
       nextReviewDate: nextReview,
+      masteredAt,
       difficultyLevel: newDifficulty,
       questionHistory: {
         create: {

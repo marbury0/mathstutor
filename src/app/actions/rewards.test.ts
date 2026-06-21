@@ -179,7 +179,7 @@ describe('Rewards Server Actions', () => {
     // Update topic to mastery level 0.8
     await prisma.topic.update({
       where: { id: 'test-topic-id' },
-      data: { masteryLevel: 0.8 },
+      data: { masteryLevel: 0.8, masteredAt: new Date() },
     });
 
     await recalculateRewardProgress(testUserId);
@@ -221,5 +221,56 @@ describe('Rewards Server Actions', () => {
     });
 
     expect(rewards.length).toBe(0);
+  });
+
+  it('should only track progress from after the reward is created', async () => {
+    // 1. Log a correct question result and complete a sprint prior to reward creation
+    await logQuestionResult(
+      testTopicName,
+      true, // isCorrect
+      10,   // timeTaken
+      'What is 5 + 5?',
+      '10', // userAnswer
+      '10'  // correctAnswer
+    );
+    await finishSession(5, 60);
+
+    // 2. Create the rewards
+    const questionReward = await createReward({
+      title: 'Post-Reward Lego',
+      targetType: 'QUESTIONS_ANSWERED',
+      targetValue: 1,
+    });
+
+    const sprintReward = await createReward({
+      title: 'Post-Reward Game',
+      targetType: 'SPRINTS_COMPLETED',
+      targetValue: 1,
+    });
+
+    // 3. Recalculate progress: should be 0 because historical progress doesn't count
+    await recalculateRewardProgress(testUserId);
+    let rewards = await getRewards();
+    expect(rewards.find((r) => r.id === questionReward.id)!.currentValue).toBe(0);
+    expect(rewards.find((r) => r.id === sprintReward.id)!.currentValue).toBe(0);
+
+    // 4. Log a new correct question and complete a new sprint after reward creation
+    await logQuestionResult(
+      testTopicName,
+      true, // isCorrect
+      10,   // timeTaken
+      'What is 2 + 2?',
+      '4',  // userAnswer
+      '4'   // correctAnswer
+    );
+    await finishSession(8, 60);
+
+    // 5. Recalculate: should now be 1
+    await recalculateRewardProgress(testUserId);
+    rewards = await getRewards();
+    expect(rewards.find((r) => r.id === questionReward.id)!.currentValue).toBe(1);
+    expect(rewards.find((r) => r.id === sprintReward.id)!.currentValue).toBe(1);
+    expect(rewards.find((r) => r.id === questionReward.id)!.unlocked).toBe(true);
+    expect(rewards.find((r) => r.id === sprintReward.id)!.unlocked).toBe(true);
   });
 });

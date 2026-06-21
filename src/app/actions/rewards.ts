@@ -134,60 +134,71 @@ export async function recalculateRewardProgress(userId: string) {
 
   if (rewards.length === 0) return;
 
-  // Gather stats
-  const correctCount = await prisma.questionHistory.count({
-    where: {
-      topic: { userId },
-      isCorrect: true
-    }
-  });
-
   const user = await prisma.user.findUnique({
     where: { id: userId }
   });
   const currentStreak = user?.currentStreak || 0;
 
-  const sprintsCount = await prisma.session.count({
-    where: { userId }
-  });
-
-  const masteredCount = await prisma.topic.count({
-    where: { userId, masteryLevel: { gte: 0.8 } }
-  });
-
-  const totalDuration = await prisma.session.aggregate({
-    where: { userId },
-    _sum: { duration: true }
-  });
-  const timeSpentMinutes = Math.round((totalDuration._sum.duration || 0) / 60);
-
-  const maxScore = await prisma.session.aggregate({
-    where: { userId },
-    _max: { score: true }
-  });
-  const highScore = maxScore._max.score || 0;
-
   for (const reward of rewards) {
     let currentVal = 0;
     switch (reward.targetType) {
       case 'QUESTIONS_ANSWERED':
-        currentVal = correctCount;
+        currentVal = await prisma.questionHistory.count({
+          where: {
+            topic: { userId },
+            isCorrect: true,
+            answeredAt: { gte: reward.createdAt }
+          }
+        });
         break;
       case 'STREAK':
         currentVal = currentStreak;
         break;
       case 'SPRINTS_COMPLETED':
-        currentVal = sprintsCount;
+        currentVal = await prisma.session.count({
+          where: {
+            userId,
+            date: { gte: reward.createdAt }
+          }
+        });
         break;
       case 'TOPICS_MASTERED':
-        currentVal = masteredCount;
+        currentVal = await prisma.topic.count({
+          where: {
+            userId,
+            masteryLevel: { gte: 0.8 },
+            OR: [
+              { masteredAt: { gte: reward.createdAt } },
+              {
+                masteredAt: null,
+                nextReviewDate: { gte: reward.createdAt }
+              }
+            ]
+          }
+        });
         break;
-      case 'TIME_SPENT':
-        currentVal = timeSpentMinutes;
+      case 'TIME_SPENT': {
+        const totalDuration = await prisma.session.aggregate({
+          where: {
+            userId,
+            date: { gte: reward.createdAt }
+          },
+          _sum: { duration: true }
+        });
+        currentVal = Math.round((totalDuration._sum.duration || 0) / 60);
         break;
-      case 'HIGH_SCORE':
-        currentVal = highScore;
+      }
+      case 'HIGH_SCORE': {
+        const maxScore = await prisma.session.aggregate({
+          where: {
+            userId,
+            date: { gte: reward.createdAt }
+          },
+          _max: { score: true }
+        });
+        currentVal = maxScore._max.score || 0;
         break;
+      }
       case 'CUSTOM_TASK':
         currentVal = reward.currentValue;
         break;
