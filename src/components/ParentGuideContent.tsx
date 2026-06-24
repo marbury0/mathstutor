@@ -36,6 +36,7 @@ export default function ParentGuideContent({ themeClass, userYearGroup }: Parent
     { id: 'y1-2', label: 'Year 1–2 (Ages 5–7) 🐣' },
     { id: 'y3-4', label: 'Year 3–4 (Ages 7–9) 🚀' },
     { id: 'y5-6', label: 'Year 5–6 (Ages 9–11) 🎓' },
+    { id: 'frustration', label: 'Frustration & Resistance 💔' },
   ];
 
   return (
@@ -351,6 +352,82 @@ export default function ParentGuideContent({ themeClass, userYearGroup }: Parent
                       </h4>
                       <p className="text-xs text-slate-500 leading-relaxed">
                         Set up a parent-approved goal (like Neve&apos;s Weekend TV goal) that tracks sprints completed across the week. Consistency is key, and clear milestones keep them motivated.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* TAB 5: FRUSTRATION & RESISTANCE */}
+          {activeTab === 'frustration' && (
+            <div className="space-y-8 animate-in fade-in duration-200">
+              <section className="bg-theme-card text-slate-900 p-8 rounded-3xl border-2 border-theme-border shadow-sm space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-rose-50 rounded-2xl border border-rose-200">
+                    <HeartHandshake className="w-6 h-6 text-rose-600 animate-pulse" />
+                  </div>
+                  <h2 className="text-2xl font-extrabold text-theme-title">Handling Frustration & Resistance</h2>
+                </div>
+
+                <p className="text-slate-600 leading-relaxed font-medium">
+                  It is completely normal for children to feel overwhelmed, cross, or emotional when learning maths. When this happens, it is often a sign of maths anxiety rather than misbehavior. Here is how to navigate these moments:
+                </p>
+
+                <div className="space-y-6">
+                  {/* Point 1 */}
+                  <div className="bg-rose-50/50 p-6 rounded-2xl border border-rose-100 flex gap-4">
+                    <AlertTriangle className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" />
+                    <div className="space-y-2">
+                      <h3 className="font-extrabold text-slate-800 text-lg">Recognize the &quot;Amygdala Hijack&quot;</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        When a child gets cross or upset, their brain enters a fight-or-flight threat response. The logical, calculations-based parts of their brain literally go offline. **Trying to force them to &quot;slow down and walk through the working&quot; in this state is biochemically impossible for them.**
+                      </p>
+                      <p className="text-sm text-slate-600 leading-relaxed font-semibold text-rose-700">
+                        <strong>Action:</strong> Immediately hit the <strong>Pause</strong> button or close the app. Never force a crying or angry child to push through. Let them calm down first.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Point 2 */}
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex gap-4">
+                    <Timer className="w-6 h-6 text-primary shrink-0 mt-0.5" />
+                    <div className="space-y-2">
+                      <h3 className="font-extrabold text-slate-800 text-lg">The 3-Minute Win (Lowering the Bar)</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        If a child resists starting because they anticipate a battle, shorten the sessions. Go to their profile settings and set the sprint duration to **3 minutes (Quick Test)** or **5 minutes**.
+                      </p>
+                      <p className="text-sm text-slate-650 leading-relaxed font-semibold">
+                        <strong>Why:</strong> Completing a short, easy 3-minute session without tears builds a memory of success. Success builds confidence, which naturally reduces resistance next time.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Point 3 */}
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex gap-4">
+                    <BookOpen className="w-6 h-6 text-secondary shrink-0 mt-0.5" />
+                    <div className="space-y-2">
+                      <h3 className="font-extrabold text-slate-800 text-lg">Be their &quot;Scribe&quot; to Reduce Load</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        Tackling a sprint requires multiple cognitive tasks: reading the text, understanding the question, calculating, typing on the keyboard, and fighting the timer. This is highly stressful.
+                      </p>
+                      <p className="text-sm text-slate-650 leading-relaxed font-semibold">
+                        <strong>Action:</strong> Sit with them and say: *&quot;You tell me what to do, and I will do the writing and typing.&quot;* You handle the screen while they think out loud, removing the physical pressure.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Point 4 */}
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex gap-4">
+                    <CheckCircle2 className="w-6 h-6 text-teal-600 shrink-0 mt-0.5" />
+                    <div className="space-y-2">
+                      <h3 className="font-extrabold text-slate-800 text-lg">Pair with a Low-Friction Routine</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        Needing constant reminders to do sessions creates a nagging dynamic. Shift the responsibility by creating a regular &quot;after-habit&quot; anchor.
+                      </p>
+                      <p className="text-sm text-slate-650 leading-relaxed font-semibold">
+                        <strong>Action:</strong> Pair it with something they already do or look forward to (e.g. *&quot;After breakfast, we do our 5-minute math sprint, and then we have 30 minutes of tablet time/go to the park.&quot;*). Once it is part of the morning/afternoon flow, reminders are rarely needed.
                       </p>
                     </div>
                   </div>

@@ -61,3 +61,27 @@ If 20 minutes is causing your child to lose focus and start skipping towards the
 If a child feels stuck on a particular topic:
 * Work together on the first question of that topic.
 * Encourage them to look at the **Visual Hint** (shown at the top of the question) or use the **First-Attempt Hint** to talk through the problem out loud.
+
+---
+
+## 💔 De-escalating Frustration & Resistance
+
+If your child frequently gets cross, upset, or emotional during sessions (even when you try to walk them through it) or requires constant reminders to practice, use these proactive strategies to reset their experience:
+
+### 1. Recognize the &quot;Amygdala Hijack&quot;
+When a child is upset or crying, their brain enters a fight-or-flight threat response. The logical, calculations-based parts of their brain (the prefrontal cortex) literally go offline. 
+* **The Rule:** Trying to force them to &quot;slow down, think, and write down the working&quot; in this state is biochemically impossible for them.
+* **The Action:** Immediately hit **Pause** or close the app. Never force a distressed child to complete a sprint. Allow them to fully calm down first.
+
+### 2. The 3-Minute Win (Lowering the Bar)
+If your child resists starting because they anticipate a battle:
+* **The Action:** Go to their profile settings and set the sprint duration to **3 minutes (Quick Test)** or **5 minutes**.
+* **Why it works:** The goal is to build a habit of *success and completion* without exhaustion. A single 3-minute session completed with a positive attitude is infinitely better for their learning than a 20-minute battle.
+
+### 3. Act as their &quot;Scribe&quot;
+Completing a sprint requires several simultaneous tasks: reading the text, interpreting the problem, calculating, typing on the keyboard, and managing the timer. This creates high cognitive load.
+* **The Action:** Sit with them and say: *&quot;You do the thinking, and I&apos;ll do the writing and typing.&quot;* You handle the input and timer stress, leaving them free to focus entirely on the mathematical concepts.
+
+### 4. Create an &quot;After-Habit&quot; Routine
+Needing to constantly remind or nag your child to practice creates a negative power struggle. Shift the responsibility by creating a predictable daily anchor.
+* **The Action:** Pair the sprint with a pleasant, existing habit (e.g., *&quot;After breakfast, we do our 5-minute maths sprint, and then we have 30 minutes of tablet time.&quot;* or *&quot;When we get home, we do the sprint first, then have a hot chocolate.&quot;*). Once it becomes a natural part of their daily flow, reminders are rarely necessary.
