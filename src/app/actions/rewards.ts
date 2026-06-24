@@ -43,6 +43,39 @@ export async function createReward(data: {
   return reward;
 }
 
+export async function updateReward(
+  rewardId: string,
+  data: {
+    title: string;
+    targetType: string;
+    targetValue: number;
+  }
+) {
+  const user = await getUser();
+  if (!user) throw new Error("No user logged in");
+
+  const reward = await prisma.reward.findUnique({
+    where: { id: rewardId }
+  });
+  if (!reward || reward.userId !== user.id) {
+    throw new Error("Reward not found or access denied");
+  }
+
+  await prisma.reward.update({
+    where: { id: rewardId },
+    data: {
+      title: data.title,
+      targetType: data.targetType,
+      targetValue: data.targetValue,
+    }
+  });
+
+  await recalculateRewardProgress(user.id);
+
+  revalidatePath('/');
+  revalidatePath('/parent');
+}
+
 export async function deleteReward(rewardId: string) {
   const user = await getUser();
   if (!user) throw new Error("No user logged in");

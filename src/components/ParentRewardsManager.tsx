@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { createReward, deleteReward, claimReward, approveTaskProgress, rejectTaskApproval } from '@/app/actions/rewards';
-import { Trophy, Plus, Trash2, CheckCircle2, Flame, Zap, BarChart2, Star, Clock, BookOpen, AlertCircle } from 'lucide-react';
+import { createReward, deleteReward, claimReward, approveTaskProgress, rejectTaskApproval, updateReward } from '@/app/actions/rewards';
+import { Trophy, Plus, Trash2, CheckCircle2, Flame, Zap, BarChart2, Star, Clock, BookOpen, AlertCircle, Pencil, Copy } from 'lucide-react';
 
 interface Reward {
   id: string;
@@ -22,6 +22,12 @@ export default function ParentRewardsManager({ initialRewards }: { initialReward
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+
+  // States for editing active rewards
+  const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editTargetType, setEditTargetType] = useState('QUESTIONS_ANSWERED');
+  const [editTargetValue, setEditTargetValue] = useState(10);
 
   const metricOptions = [
     { value: 'QUESTIONS_ANSWERED', label: 'Correct Questions Answered', icon: CheckCircle2, unit: 'questions' },
@@ -69,6 +75,60 @@ export default function ParentRewardsManager({ initialRewards }: { initialReward
       } catch (err) {
         console.error(err);
         setError('Failed to delete reward.');
+      }
+    });
+  };
+
+  const startEditing = (reward: Reward) => {
+    setEditingRewardId(reward.id);
+    setEditTitle(reward.title);
+    setEditTargetType(reward.targetType);
+    setEditTargetValue(reward.targetValue);
+  };
+
+  const cancelEditing = () => {
+    setEditingRewardId(null);
+    setEditTitle('');
+    setEditTargetType('QUESTIONS_ANSWERED');
+    setEditTargetValue(10);
+  };
+
+  const handleUpdateReward = async (id: string) => {
+    const trimmedTitle = editTitle.trim();
+    if (!trimmedTitle) return;
+    if (editTargetValue <= 0) {
+      setError('Target value must be greater than 0.');
+      return;
+    }
+
+    setError(null);
+    startTransition(async () => {
+      try {
+        await updateReward(id, {
+          title: trimmedTitle,
+          targetType: editTargetType,
+          targetValue: Number(editTargetValue),
+        });
+        setEditingRewardId(null);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to update reward.');
+      }
+    });
+  };
+
+  const handleCloneReward = async (reward: Reward) => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await createReward({
+          title: reward.title,
+          targetType: reward.targetType,
+          targetValue: reward.targetValue,
+        });
+      } catch (err) {
+        console.error(err);
+        setError('Failed to clone reward.');
       }
     });
   };
@@ -196,6 +256,7 @@ export default function ParentRewardsManager({ initialRewards }: { initialReward
               ) : (
                 <div className="space-y-3">
                   {activeRewards.map((reward) => {
+                    const isEditing = editingRewardId === reward.id;
                     const option =
                       metricOptions.find((opt) => opt.value === reward.targetType) ||
                       metricOptions[0];
@@ -205,84 +266,164 @@ export default function ParentRewardsManager({ initialRewards }: { initialReward
                       Math.round((reward.currentValue / reward.targetValue) * 100)
                     );
 
+                    const editOption = metricOptions.find(opt => opt.value === editTargetType) || metricOptions[0];
+
                     return (
                       <div key={reward.id} className="space-y-2">
-                        <div
-                          className={`p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
-                            reward.unlocked
-                              ? 'bg-emerald-50/60 border-emerald-300 shadow-sm'
-                              : 'bg-white border-slate-200 hover:border-slate-350'
-                          }`}
-                        >
-                          <div className="flex-1 space-y-2 w-full">
-                            <div className="flex items-start md:items-center justify-between gap-2">
+                        {isEditing ? (
+                          <div className="p-4 rounded-xl border-2 border-primary bg-slate-50 flex flex-col gap-4 animate-in fade-in zoom-in-95">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <div>
-                                <h4 className="font-extrabold text-slate-800 text-base flex flex-wrap items-center gap-1.5">
-                                  {reward.title}
-                                  {reward.unlocked && (
-                                    <span className="bg-emerald-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider animate-bounce">
-                                      Unlocked! 🌟
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Description</label>
+                                <input
+                                  type="text"
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  className="w-full p-2 border border-slate-300 rounded-lg text-xs font-semibold bg-white text-slate-900"
+                                  disabled={isPending}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Based on Metric</label>
+                                <select
+                                  value={editTargetType}
+                                  onChange={(e) => setEditTargetType(e.target.value)}
+                                  className="w-full p-2 border border-slate-300 rounded-lg text-xs font-semibold bg-white text-slate-900 cursor-pointer"
+                                  disabled={isPending}
+                                >
+                                  {metricOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                      {opt.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-end gap-4">
+                              <div className="w-24">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Target Value</label>
+                                <input
+                                  type="number"
+                                  value={editTargetValue}
+                                  onChange={(e) => setEditTargetValue(Math.max(1, parseInt(e.target.value) || 0))}
+                                  className="w-full p-2 border border-slate-300 rounded-lg text-xs font-bold text-center bg-white text-slate-900"
+                                  min="1"
+                                  disabled={isPending}
+                                  required
+                                />
+                              </div>
+                              <div className="text-[10px] text-slate-500 italic flex-1 pb-1">
+                                Goal unit: {editOption.unit} (Current progress: {reward.currentValue})
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateReward(reward.id)}
+                                  disabled={isPending || !editTitle.trim()}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3 py-2 rounded-lg text-xs transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={cancelEditing}
+                                  disabled={isPending}
+                                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs transition-all cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className={`p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                              reward.unlocked
+                                ? 'bg-emerald-50/60 border-emerald-300 shadow-sm'
+                                : 'bg-white border-slate-200 hover:border-slate-350'
+                            }`}
+                          >
+                            <div className="flex-1 space-y-2 w-full">
+                              <div className="flex items-start md:items-center justify-between gap-2">
+                                <div>
+                                  <h4 className="font-extrabold text-slate-800 text-base flex flex-wrap items-center gap-1.5">
+                                    {reward.title}
+                                    {reward.unlocked && (
+                                      <span className="bg-emerald-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider animate-bounce">
+                                        Unlocked! 🌟
+                                      </span>
+                                    )}
+                                    {reward.pendingApproval && !reward.unlocked && (
+                                      <span className="bg-yellow-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider flex items-center gap-1">
+                                        <AlertCircle className="w-3 h-3" /> Needs Check
+                                      </span>
+                                    )}
+                                  </h4>
+                                  <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mt-0.5">
+                                    <Icon className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>
+                                      Goal: {reward.targetValue} {option.unit} ({option.label})
                                     </span>
-                                  )}
-                                  {reward.pendingApproval && !reward.unlocked && (
-                                    <span className="bg-yellow-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider flex items-center gap-1">
-                                      <AlertCircle className="w-3 h-3" /> Needs Check
-                                    </span>
-                                  )}
-                                </h4>
-                                <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mt-0.5">
-                                  <Icon className="w-3.5 h-3.5 text-slate-400" />
-                                  <span>
-                                    Goal: {reward.targetValue} {option.unit} ({option.label})
-                                  </span>
+                                  </div>
+                                </div>
+                                <div className="text-right text-xs font-bold text-slate-700 whitespace-nowrap">
+                                  {reward.currentValue} / {reward.targetValue} ({percentage}%)
                                 </div>
                               </div>
-                              <div className="text-right text-xs font-bold text-slate-700 whitespace-nowrap">
-                                {reward.currentValue} / {reward.targetValue} ({percentage}%)
+ 
+                              {/* Progress Bar */}
+                              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${
+                                    reward.unlocked ? 'bg-emerald-500' : 'bg-primary'
+                                  }`}
+                                  style={{ width: `${percentage}%` }}
+                                />
                               </div>
                             </div>
-
-                            {/* Progress Bar */}
-                            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all duration-500 ${
-                                  reward.unlocked ? 'bg-emerald-500' : 'bg-primary'
-                                }`}
-                                style={{ width: `${percentage}%` }}
-                              />
+ 
+                            <div className="flex items-center gap-2 self-end md:self-center">
+                              {reward.targetType === 'CUSTOM_TASK' && !reward.unlocked && (
+                                <button
+                                  onClick={() => handleApproveProgress(reward.id)}
+                                  disabled={isPending}
+                                  className="bg-primary-bg hover:bg-primary/20 text-primary text-xs font-bold px-3 py-2 rounded-xl border border-primary/20 transition-all cursor-pointer shadow-sm"
+                                  title="Add 1 Progress Manually"
+                                >
+                                  +1 Progress
+                                </button>
+                              )}
+                              {reward.unlocked && (
+                                <button
+                                  onClick={() => handleClaimReward(reward.id)}
+                                  disabled={isPending}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md hover:scale-[1.02] active:scale-95"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" /> Mark Claimed
+                                </button>
+                              )}
+                              {!reward.unlocked && (
+                                <button
+                                  onClick={() => startEditing(reward)}
+                                  disabled={isPending}
+                                  className="text-slate-400 hover:text-primary p-2 rounded-xl hover:bg-primary-bg transition-all cursor-pointer"
+                                  title="Edit Goal"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteReward(reward.id)}
+                                disabled={isPending}
+                                className="text-slate-400 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-all cursor-pointer"
+                                title="Delete Goal"
+                              >
+                                <Trash2 className="w-4.5 h-4.5" />
+                              </button>
                             </div>
                           </div>
-
-                          <div className="flex items-center gap-2 self-end md:self-center">
-                            {reward.targetType === 'CUSTOM_TASK' && !reward.unlocked && (
-                              <button
-                                onClick={() => handleApproveProgress(reward.id)}
-                                disabled={isPending}
-                                className="bg-primary-bg hover:bg-primary/20 text-primary text-xs font-bold px-3 py-2 rounded-xl border border-primary/20 transition-all cursor-pointer shadow-sm"
-                                title="Add 1 Progress Manually"
-                              >
-                                +1 Progress
-                              </button>
-                            )}
-                            {reward.unlocked && (
-                              <button
-                                onClick={() => handleClaimReward(reward.id)}
-                                disabled={isPending}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md hover:scale-[1.02] active:scale-95"
-                              >
-                                <CheckCircle2 className="w-4 h-4" /> Mark Claimed
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteReward(reward.id)}
-                              disabled={isPending}
-                              className="text-slate-400 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-all cursor-pointer"
-                              title="Delete Goal"
-                            >
-                              <Trash2 className="w-4.5 h-4.5" />
-                            </button>
-                          </div>
-                        </div>
+                        )}
 
                         {/* Pending Approval Panel */}
                         {reward.pendingApproval && !reward.unlocked && (
@@ -378,6 +519,14 @@ export default function ParentRewardsManager({ initialRewards }: { initialReward
                               </div>
 
                               <div className="flex items-center gap-2 self-end md:self-center">
+                                <button
+                                  onClick={() => handleCloneReward(reward)}
+                                  disabled={isPending}
+                                  className="text-slate-400 hover:text-primary p-2 rounded-xl hover:bg-primary-bg transition-all cursor-pointer"
+                                  title="Clone to current week"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
                                 <button
                                   onClick={() => handleDeleteReward(reward.id)}
                                   disabled={isPending}

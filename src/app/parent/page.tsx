@@ -44,6 +44,19 @@ export default async function ParentDashboard() {
                 <h2 className="text-xl font-bold text-slate-800 font-extrabold text-theme-title">Recent Sprints</h2>
                 <RecentSprints sessions={sessions} />
               </section>
+
+              <section className="bg-theme-card text-slate-900 p-6 rounded-2xl border-2 border-theme-border shadow-sm space-y-4">
+                <h2 className="text-xl font-bold text-theme-title font-extrabold">Parent Guide & Advice 📚</h2>
+                <p className="text-slate-600 text-sm leading-relaxed font-medium">
+                  Learn how to set healthy study limits, configure reward incentives, and support your child when they skip or struggle with questions.
+                </p>
+                <Link 
+                  href="/parent/guide" 
+                  className="inline-block bg-primary hover:bg-primary-hover text-white font-extrabold py-3 px-6 rounded-xl shadow transition-colors cursor-pointer text-sm"
+                >
+                  Read Parent Guide
+                </Link>
+              </section>
             </div>
 
             <div className="md:col-span-1">
