@@ -4,8 +4,8 @@
 set -e
 
 # Configuration
-DB_FILE="maths_tutor.db"
-BACKUP_DIR="backups"
+DB_FILE="data/maths_tutor.db"
+BACKUP_DIR="data/backups"
 MAX_BACKUPS=3
 
 # Color outputs
@@ -63,7 +63,7 @@ function restore_db() {
 
   if [ -z "$file" ]; then
     echo -e "${RED}Error: Please specify a backup file to restore.${NC}"
-    echo -e "Example: $0 restore backups/maths_tutor_backup_2026-06-12_15-00-00.db"
+    echo -e "Example: $0 restore data/backups/maths_tutor_backup_2026-06-12_15-00-00.db"
     exit 1
   fi
 
@@ -86,7 +86,7 @@ function restore_db() {
     fi
 
     # 2. Delete WAL/journal files to avoid locking conflicts with the restored base file
-    rm -f maths_tutor.db-journal maths_tutor.db-shm maths_tutor.db-wal
+    rm -f data/maths_tutor.db-journal data/maths_tutor.db-shm data/maths_tutor.db-wal
 
     # 3. Copy the backup file to active db
     cp "$file" "$DB_FILE"

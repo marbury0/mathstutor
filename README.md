@@ -61,7 +61,7 @@ npm install
 Create a `.env` file in the root folder:
 ```env
 GEMINI_API_KEY="your-google-gemini-api-key"
-DATABASE_URL="file:./maths_tutor.db"
+DATABASE_URL="file:./data/maths_tutor.db"
 MOCK_AI=false
 ```
 

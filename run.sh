@@ -19,8 +19,8 @@ else
   echo -e "${GREEN}✓ Dependencies installed.${NC}"
 fi
 
-# 2. Set up database if maths_tutor.db doesn't exist
-if [ ! -f "maths_tutor.db" ]; then
+# 2. Set up database if data/maths_tutor.db doesn't exist
+if [ ! -f "data/maths_tutor.db" ]; then
   echo -e "${YELLOW}Database not found. Initializing SQLite database...${NC}"
   npx prisma db push
   echo -e "${GREEN}✓ Database initialized and seeded.${NC}"

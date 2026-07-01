@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { getPrompt } from "./promptLoader";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({
@@ -66,15 +67,10 @@ export function cleanMathText(text: string): string {
  * This ensures the answer and text actually match up.
  */
 async function validateMath(question: string, reportedAnswer: string): Promise<boolean> {
-  const prompt = `
-    You are a Mathematical Validator. 
-    Review this math problem and the reported answer:
-    Problem: "${question}"
-    Reported Answer: "${reportedAnswer}"
-    
-    Is the reported answer mathematically correct based on the text? 
-    Answer ONLY with "YES" or "NO". No other text.
-  `;
+  const prompt = getPrompt("validateMath.txt", {
+    question,
+    reportedAnswer,
+  });
 
   const result = await model.generateContent(prompt);
   const response = result.response.text().trim().toLowerCase().replace(/[^a-z]/g, "");
@@ -119,31 +115,16 @@ export async function generateQuestion(
     };
   }
 
-
-  const prompt = `
-    You are an expert UK Primary School Maths Tutor. Your name is "${tutorName}".
-    Generate a word problem for "${topic}" (Year ${profile.yearGroup}, Age ${age}).
-    Personalize for ${profile.name} (Likes: ${profile.hobbies.join(", ")}, Pets: ${petsList}).
-    
-    Difficulty Level: ${profile.difficultyLevel}/10 (1 = very basic, 10 = challenging for this year group).
-    
-    Guidelines for Accuracy:
-    - For Algebra: Clearly define variables. If b is the number of items, explain finding b as "finding the number of items" (do not use LaTeX $b$).
-    - For Word Problems: Keep scenarios logical and numbers age-appropriate. NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees, x or letters directly for variables).
-    
-    Child Safety:
-    - The word problem, name context, and explanation must be 100% appropriate and safe for primary school children (Ages 5-11).
-    - NEVER generate scenarios involving violence, fear, weapons, danger, injury, illness, dark themes, or mature topics. Keep the tone warm, positive, and encouraging.
-    
-    Return JSON:
-    - reasoning: Internal calculation steps.
-    - text: The word problem.
-    - answer: The final answer, including the appropriate unit or symbol if the question requires one (e.g., "5cm", "12m", "45°", "20%", "2.5kg", "£4.50"). Do not omit the unit. For length, area, volume, mass, capacity, percentage, or angle, append the unit directly. If no unit is applicable, return just the number.
-    - acceptableAnswers: An array of strings containing different acceptable formats or equivalent representations of the final answer (e.g., if the answer is "5cm", include ["5cm", "5 cm", "5", "5 centimetres"]. If it is "5 bricks", include ["5", "5 bricks", "5 lego bricks"]. If it is "1/2", include ["1/2", "0.5", "half", "0.50", "50%"]. If it is currency like "£4.50", include ["£4.50", "4.50", "4.5", "£4.5"]). Ensure it handles spelling variations, equivalent fractions, decimal/percent equivalents, alternate unit spacing, and context-specific unit variations (e.g. unitless vs with unit).
-    - explanation: How to solve it, using precise mathematical language.
-    - visualHint: A simple visual representation of the problem setup using emojis to help the child visualize the objects and quantities (e.g. 🍎🍎 + 🍎 = ?). NEVER include the final answer, result, or completed equation. If there is a missing number, represent it with a question mark (?).
-    - topic: Topic name.
-  `;
+  const prompt = getPrompt("generateQuestion.txt", {
+    tutorName,
+    topic,
+    yearGroup: profile.yearGroup,
+    age,
+    name: profile.name,
+    hobbies: profile.hobbies.join(", "),
+    petsList,
+    difficultyLevel: profile.difficultyLevel,
+  });
 
   let attempts = 0;
   while (attempts < 3) {
@@ -186,14 +167,14 @@ export async function getAdaptiveHint(
   if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
     return `Hey ${profileName}, ${tutorName} thinks you should think about what you get when you put 2 and 2 together!`;
   }
-  const prompt = `
-    You are an expert UK Primary School Maths Tutor named "${tutorName}".
-    A Year ${yearGroup} student named ${profileName} answered "${wrongAnswer}" to: "${question}" (Correct: "${correctAnswer}").
-    Provide a friendly, age-appropriate hint (don't give the answer) suitable for a Year ${yearGroup} student.
-    Speak directly to the child as "${tutorName}". Keep the tone warm, positive, encouraging, and child-safe.
-    NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
-    Child Safety: Ensure the hint tone and language are 100% child-safe, positive, encouraging, and appropriate for primary school kids.
-  `;
+  const prompt = getPrompt("getAdaptiveHint.txt", {
+    tutorName,
+    yearGroup,
+    profileName,
+    wrongAnswer,
+    question,
+    correctAnswer,
+  });
   const result = await model.generateContent(prompt);
   return cleanMathText(result.response.text());
 }
@@ -214,18 +195,12 @@ export async function diagnoseError(
       advice: "Double check your simple arithmetic adding 2 and 2."
     };
   }
-  const prompt = `
-    A Year ${yearGroup} student gave the wrong answer "${wrongAnswer}" to this question: "${question}".
-    The correct answer is "${correctAnswer}".
-    
-    Analyze their mistake. Are they confusing place value? Did they pick the wrong operation? Did they make a simple calculation error?
-    
-    Child Safety: The output must remain entirely child-appropriate, encouraging, and supportive.
-    
-    Return a JSON object:
-    - misconception: A short description of what they did wrong.
-    - advice: A one-sentence tip to help them avoid this mistake next time.
-  `;
+  const prompt = getPrompt("diagnoseError.txt", {
+    yearGroup,
+    wrongAnswer,
+    question,
+    correctAnswer,
+  });
 
   const result = await model.generateContent(prompt);
   const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
@@ -246,19 +221,12 @@ export async function getAlternativeExplanation(
   if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
     return `Alternative: Since 2 and 2 make 4, the total is 4, explains ${tutorName}.`;
   }
-  const prompt = `
-    You are an expert UK Primary School Maths Tutor named "${tutorName}".
-    A child named ${profileName} did not understand this explanation:
-    "${explanation}"
-    
-    For the question:
-    "${question}"
-    
-    Explain it in another way that is simple, fun, and extremely easy for a child to understand. Use analogies, visuals, or simple step-by-step guidance.
-    Speak directly to the child as "${tutorName}". Keep the tone warm, positive, encouraging, and child-safe.
-    NEVER use LaTeX notation (like $ or \circ). Use standard characters (like ° for degrees).
-    Child Safety: The explanation must be completely safe, encouraging, and appropriate for primary school children.
-  `;
+  const prompt = getPrompt("getAlternativeExplanation.txt", {
+    tutorName,
+    profileName,
+    explanation,
+    question,
+  });
   const result = await model.generateContent(prompt);
   return cleanMathText(result.response.text());
 }
@@ -307,37 +275,17 @@ export async function generateWeeklyInsights(
     })
     .join("\n");
 
-  const prompt = `
-    You are an expert UK Primary School Maths Tutor and Educational Consultant. 
-    Provide a professional, supportive, and detailed Weekly Progress Report and Insights for a parent about their child's math learning this week.
-    
-    Child Profile:
-    - Name: ${profile.name}
-    - Age: ${profile.age} (Year ${profile.yearGroup} in the UK Curriculum)
-    - Tutor AI Companion: ${profile.tutorName}
-    
-    Weekly Metrics:
-    - Questions Attempted: ${metrics.questionsCount}
-    - Overall Accuracy: ${Math.round(metrics.accuracy)}%
-    - Points Earned: ${metrics.pointsEarned}
-    - Total Practice Time: ${Math.round(metrics.studyTime / 60)} minutes
-    
-    Topic-by-Topic Performance and Diagnosed Errors:
-    ${topicSummaryText}
-    
-    Guidelines:
-    1. Write a warm, analytical "aiAnalysis" for the parent in markdown. Explain what they did well, diagnose their learning gaps (e.g. if they struggled with specific misconceptions like confusion of place value or operation), and explain it in simple parent-friendly terms.
-    2. Write a concrete, actionable "recsPlan" for the parent in markdown. Suggest 2-3 specific learning actions or fun real-world activities to do at home (e.g., cooking measurements, shopping calculations) to reinforce concepts they struggled with.
-    3. Write an encouraging, enthusiastic "encouragement" note directly to the child. Celebrate their efforts, mention their favorite tutor "${profile.tutorName}", and keep it short and exciting so a parent can read it aloud.
-    4. Keep the output 100% child-safe, encouraging, and free from any LaTeX syntax. Use standard symbols (e.g. %, +, -, *, /) and standard formatting.
-    
-    Return a JSON object with exactly these fields:
-    {
-      "aiAnalysis": "Markdown string containing the detailed analysis for parents...",
-      "recsPlan": "Markdown string containing the action plan...",
-      "encouragement": "Enthusiastic note to the child..."
-    }
-  `;
+  const prompt = getPrompt("generateWeeklyInsights.txt", {
+    name: profile.name,
+    age: profile.age,
+    yearGroup: profile.yearGroup,
+    tutorName: profile.tutorName,
+    questionsCount: metrics.questionsCount,
+    accuracy: Math.round(metrics.accuracy),
+    pointsEarned: metrics.pointsEarned,
+    studyTime: Math.round(metrics.studyTime / 60),
+    topicSummaryText,
+  });
 
   try {
     const result = await model.generateContent(prompt);

@@ -1,0 +1,15 @@
+A Year {{yearGroup}} student gave the wrong answer "{{wrongAnswer}}" to this question: "{{question}}".
+The correct answer is "{{correctAnswer}}".
+
+Analyze their mistake. Determine which specific category of error they made:
+- Arithmetic Slip (simple addition/subtraction mistake)
+- Operation Confusion (adding instead of multiplying, etc.)
+- Place Value Error (confusing tens and ones, misalignment)
+- Incomplete Process (forgetting the final step of a multi-step problem)
+- Unit Conversion Error (e.g. converting cm to m incorrectly)
+
+Child Safety: The output must remain entirely child-appropriate, encouraging, and supportive.
+
+Return a JSON object:
+- misconception: A short, precise description of the diagnosed error type (e.g., "Place Value Misalignment").
+- advice: A one-sentence, friendly tip written directly to the child to help them avoid this mistake next time (e.g., "Remember to count your tens first!").

@@ -10,7 +10,7 @@ GCP offers:
 
 ## 🛠️ The Architectural Challenge: SQLite Database Persistence
 
-Your application uses **SQLite** (`maths_tutor.db`), which writes data directly to a local file on the disk. This presents a challenge in serverless environments:
+Your application uses **SQLite** (`data/maths_tutor.db`), which writes data directly to a local file on the disk. This presents a challenge in serverless environments:
 * **Serverless platforms (like Google Cloud Run or Vercel)** use ephemeral file systems. When your application scales down to zero or restarts (which happens frequently), any changes written to your SQLite database are permanently wiped out.
 * **VMs (like Google Compute Engine)** use persistent disks. The database file stays safe and intact across restarts.
 
@@ -34,7 +34,7 @@ Based on this, here are the two best deployment strategies for your project:
 graph TD
     User([User's Browser]) -->|HTTPS / SSL| Proxy[Caddy / Nginx Reverse Proxy]
     Proxy -->|Local Port 3000| NextJS[Next.js App]
-    NextJS -->|Local I/O| SQLite[(SQLite Database: maths_tutor.db)]
+    NextJS -->|Local I/O| SQLite[(SQLite Database: data/maths_tutor.db)]
     NextJS -->|API Call| Gemini[Google Gemini API]
 ```
 
@@ -97,7 +97,7 @@ nano .env
 Add your configuration:
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
-DATABASE_URL="file:./maths_tutor.db"
+DATABASE_URL="file:./data/maths_tutor.db"
 MOCK_AI=false
 PORT=3000
 NODE_ENV=production

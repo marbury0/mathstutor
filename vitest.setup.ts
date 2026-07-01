@@ -2,13 +2,13 @@ import { vi } from 'vitest';
 import { execSync } from 'child_process';
 
 // Redirect database URL to a dedicated test database
-process.env.DATABASE_URL = 'file:./maths_tutor_test.db';
+process.env.DATABASE_URL = 'file:./data/maths_tutor_test.db';
 
 // Ensure the test database is synchronized with the schema
 try {
   execSync('npx prisma db push --accept-data-loss', {
     stdio: 'inherit',
-    env: { ...process.env, DATABASE_URL: 'file:./maths_tutor_test.db' }
+    env: { ...process.env, DATABASE_URL: 'file:./data/maths_tutor_test.db' }
   });
 } catch (error) {
   console.error('Failed to push schema to test database:', error);

@@ -23,7 +23,7 @@ if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
   echo -e "${BLUE}Resetting database...${NC}"
   
   # Remove SQLite database file and associated WAL/journal files
-  rm -f maths_tutor.db maths_tutor.db-journal maths_tutor.db-shm maths_tutor.db-wal
+  rm -f data/maths_tutor.db data/maths_tutor.db-journal data/maths_tutor.db-shm data/maths_tutor.db-wal
   
   # Re-push schema to create a clean database structure
   npx prisma db push
