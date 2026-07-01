@@ -62,25 +62,26 @@ test.describe('Parent Dashboard & Progress Tracking', () => {
     await page.getByRole('button', { name: 'Submit 🚀' }).click();
     await expect(page.getByText('Score: 1')).toBeVisible();
 
-    // 4. Fast-forward the virtual clock by 7 seconds to force the 5-second sprint timer to expire
-    console.log('Fast-forwarding clock to end of session...');
-    for (let i = 0; i < 7; i++) {
-      await page.clock.runFor(1000);
-    }
+    // Fast-forward the virtual clock by 5 seconds to simulate study time
+    await page.clock.runFor(5000);
 
-    // 5. Verify the "Time's Up!" end-screen appears
-    await expect(page.getByText("Time's Up!")).toBeVisible();
-    await expect(page.getByText('You scored 1 points!')).toBeVisible();
+    // 4. Answer the second question correctly to complete the 2-question test sprint
+    await page.getByPlaceholder('Type your answer...').fill('4');
+    await page.getByRole('button', { name: 'Submit 🚀' }).click();
+
+    // 5. Verify the "Sprint Completed!" end-screen appears
+    await expect(page.getByRole('heading', { name: 'Sprint Completed! 🏆' })).toBeVisible();
+    await expect(page.getByText('You scored 2 out of 2 questions!')).toBeVisible();
 
     // 6. Navigate back to Home/Dashboard (which reloads the dashboard state)
-    await page.goto('/');
+    await page.getByRole('button', { name: 'Back to Dashboard' }).click();
 
     // 7. Navigate to Parent Dashboard
     await page.goto('/parent');
 
     // 8. Verify the completed session is now logged in the list
     await expect(page.getByText('No sessions recorded yet.')).not.toBeVisible();
-    await expect(page.getByText('1 pts')).toBeVisible();
+    await expect(page.getByText('2 pts')).toBeVisible();
     await expect(page.getByText('0m 5s duration')).toBeVisible();
   });
 

@@ -23,7 +23,20 @@ export default function EditProfileForm({ user }: { user: User }) {
   const [tutorName, setTutorName] = useState(user.tutorName || 'Maths Bot');
   const [theme, setTheme] = useState(user.theme || 'ocean');
   const [avatar, setAvatar] = useState(user.avatar || '🐱');
-  const [sprintDuration, setSprintDuration] = useState(user.sprintDuration ? Math.round(user.sprintDuration / 60) : 15);
+  const [sprintQuestions, setSprintQuestions] = useState(() => {
+    const dbVal = user.sprintDuration || 15;
+    if (dbVal >= 60) {
+      const mins = Math.round(dbVal / 60);
+      if (mins <= 3) return 3;
+      if (mins <= 5) return 5;
+      if (mins <= 10) return 10;
+      if (mins <= 15) return 15;
+      if (mins <= 20) return 20;
+      if (mins <= 25) return 25;
+      return 30;
+    }
+    return dbVal;
+  });
   
   const [hobbies, setHobbies] = useState<string[]>(() => {
     try {
@@ -90,7 +103,7 @@ export default function EditProfileForm({ user }: { user: User }) {
         tutorName: tutorName.trim(),
         theme,
         avatar,
-        sprintDuration: sprintDuration * 60,
+        sprintDuration: sprintQuestions,
       });
       setMessage({ text: 'Profile updated successfully! 🎉', type: 'success' });
       setTimeout(() => setMessage(null), 3000);
@@ -173,20 +186,20 @@ export default function EditProfileForm({ user }: { user: User }) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Daily Sprint Time ⏱️</label>
+          <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Questions per Sprint 🎯</label>
           <select
-            value={sprintDuration}
-            onChange={(e) => setSprintDuration(parseInt(e.target.value, 10))}
+            value={sprintQuestions}
+            onChange={(e) => setSprintQuestions(parseInt(e.target.value, 10))}
             className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium cursor-pointer"
             disabled={isSaving}
           >
-            <option value={3}>3 minutes (Quick Test)</option>
-            <option value={5}>5 minutes (Recommended for Yr 1–2)</option>
-            <option value={10}>10 minutes (Recommended for Yr 3–4)</option>
-            <option value={15}>15 minutes (Recommended for Yr 5–6)</option>
-            <option value={20}>20 minutes</option>
-            <option value={25}>25 minutes</option>
-            <option value={30}>30 minutes</option>
+            <option value={3}>3 questions (Quick Test)</option>
+            <option value={5}>5 questions (Recommended for Yr 1–2)</option>
+            <option value={10}>10 questions (Recommended for Yr 3–4)</option>
+            <option value={15}>15 questions (Recommended for Yr 5–6)</option>
+            <option value={20}>20 questions</option>
+            <option value={25}>25 questions</option>
+            <option value={30}>30 questions</option>
           </select>
         </div>
 

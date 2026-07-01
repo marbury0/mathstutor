@@ -53,17 +53,20 @@ export function normalizeAnswer(ans: string): string {
 }
 
 export default function Sprint({
+  userId,
   onFinish,
   isTestMode = false,
   tutorName = 'Maths Bot',
   sprintDuration = 900
 }: {
+  userId: string;
   onFinish: (score: number) => void;
   isTestMode?: boolean;
   tutorName?: string;
   sprintDuration?: number;
 }) {
-  const [timeLeft, setTimeLeft] = useState(sprintDuration);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [questionsCompleted, setQuestionsCompleted] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
@@ -77,16 +80,23 @@ export default function Sprint({
   const [isExplainingLoading, setIsExplainingLoading] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
-  const initialTime = useRef(sprintDuration);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const isSessionEnding = useRef(false);
 
-  useEffect(() => {
-    if (isTestMode) {
-      console.log('Test override detected: Setting sprint duration to 5 seconds.');
-      initialTime.current = 5;
-      const timer = setTimeout(() => setTimeLeft(5), 0);
-      return () => clearTimeout(timer);
+  const totalQuestions = isTestMode ? 2 : (() => {
+    // Check if the saved value is in seconds (e.g. 300, 600, 900) or directly a question count
+    if (sprintDuration >= 60) {
+      const mins = Math.round(sprintDuration / 60);
+      if (mins <= 3) return 3;
+      if (mins <= 5) return 5;
+      if (mins <= 10) return 10;
+      if (mins <= 15) return 15;
+      if (mins <= 20) return 20;
+      if (mins <= 25) return 25;
+      return 30;
     }
-  }, [isTestMode]);
+    return sprintDuration || 15;
+  })();
   
   const questionStartTime = useRef<number>(0);
   const isFetching = useRef(false);
@@ -126,11 +136,19 @@ export default function Sprint({
     }
   };
 
-  const handleFinalFinish = useCallback(async () => {
-    setIsFinished(true);
-    const duration = Math.max(0, initialTime.current - timeLeft);
-    await finishSession(score, duration);
-  }, [score, timeLeft]);
+  const handleNextQuestion = useCallback(async (newScore: number) => {
+    const nextCount = questionsCompleted + 1;
+    setQuestionsCompleted(nextCount);
+    
+    if (nextCount >= totalQuestions) {
+      isSessionEnding.current = true;
+      setIsFinished(true);
+      localStorage.removeItem(`maths_tutor_sprint_${userId}`);
+      await finishSession(newScore, elapsedTime);
+    } else {
+      await loadNextQuestion();
+    }
+  }, [questionsCompleted, totalQuestions, elapsedTime, loadNextQuestion, userId]);
 
   const handleExitClick = () => {
     setIsPaused(true);
@@ -139,18 +157,22 @@ export default function Sprint({
 
   const handleSaveAndExit = async () => {
     if (isLoading) return;
+    isSessionEnding.current = true;
     setIsLoading(true);
     try {
-      const duration = Math.max(0, initialTime.current - timeLeft);
-      await finishSession(score, duration);
+      await finishSession(score, elapsedTime);
+      localStorage.removeItem(`maths_tutor_sprint_${userId}`);
       onFinish(score);
     } catch (e) {
       console.error(e);
+      isSessionEnding.current = false;
       setIsLoading(false);
     }
   };
 
   const handleDiscardAndExit = () => {
+    isSessionEnding.current = true;
+    localStorage.removeItem(`maths_tutor_sprint_${userId}`);
     onFinish(score);
   };
 
@@ -160,27 +182,82 @@ export default function Sprint({
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const storageKey = `maths_tutor_sprint_${userId}`;
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const EXPIRATION_MS = 72 * 60 * 60 * 1000; // 72 hours
+        if (parsed.timestamp && Date.now() - parsed.timestamp > EXPIRATION_MS) {
+          localStorage.removeItem(storageKey);
+          loadNextQuestion();
+        } else {
+          setElapsedTime(parsed.elapsedTime ?? 0);
+          setQuestionsCompleted(parsed.questionsCompleted ?? 0);
+          setScore(parsed.score ?? 0);
+          setCurrentQuestion(parsed.currentQuestion ?? null);
+          setAttempts(parsed.attempts ?? 0);
+          setHint(parsed.hint ?? null);
+          setShowFullExplanation(parsed.showFullExplanation ?? false);
+          setAlternativeExplanation(parsed.alternativeExplanation ?? null);
+          setIsPaused(parsed.isPaused ?? false);
+          setIsLoading(false);
+          questionStartTime.current = Date.now();
+          if (!parsed.currentQuestion) {
+            loadNextQuestion();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse saved sprint:", e);
+        localStorage.removeItem(storageKey);
+        loadNextQuestion();
+      }
+    } else {
       loadNextQuestion();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [loadNextQuestion]);
+    }
+    setIsInitialized(true);
+  }, [userId, loadNextQuestion]);
+
+  useEffect(() => {
+    if (!isInitialized || isSessionEnding.current) return;
+
+    const storageKey = `maths_tutor_sprint_${userId}`;
+    const stateToSave = {
+      elapsedTime,
+      questionsCompleted,
+      score,
+      currentQuestion,
+      attempts,
+      hint,
+      showFullExplanation,
+      alternativeExplanation,
+      isPaused,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(storageKey, JSON.stringify(stateToSave));
+  }, [
+    isInitialized,
+    userId,
+    elapsedTime,
+    questionsCompleted,
+    score,
+    currentQuestion,
+    attempts,
+    hint,
+    showFullExplanation,
+    alternativeExplanation,
+    isPaused,
+  ]);
 
   useEffect(() => {
     if (isPaused || isFinished || isLoading || !currentQuestion) return;
-    if (timeLeft <= 0) {
-      const timer = setTimeout(() => {
-        handleFinalFinish();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setElapsedTime((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isFinished, isPaused, isLoading, currentQuestion, handleFinalFinish]);
+  }, [isPaused, isFinished, isLoading, currentQuestion]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,7 +313,7 @@ export default function Sprint({
           trimmedCorrect
         );
         setScore(score + 1);
-        await loadNextQuestion();
+        await handleNextQuestion(score + 1);
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
@@ -263,19 +340,24 @@ export default function Sprint({
     }
   };
 
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
+  const minutes = Math.floor(elapsedTime / 60);
+  const seconds = elapsedTime % 60;
 
   if (isFinished) {
     return (
       <div className="text-center space-y-6 p-8 bg-theme-card text-slate-900 rounded-3xl shadow-2xl border-4 border-green-500">
-        <h2 className="text-4xl font-bold text-green-700 flex items-center justify-center gap-2">
-          Time&apos;s Up! <CheckCircle2 className="w-10 h-10 text-green-600" />
+        <h2 className="text-4xl font-extrabold text-green-700 flex items-center justify-center gap-2 animate-bounce">
+          Sprint Completed! 🏆
         </h2>
-        <p className="text-2xl text-slate-800">You scored <span className="font-bold text-secondary">{score}</span> points!</p>
+        <p className="text-2xl text-slate-800 font-bold">
+          You scored <span className="font-extrabold text-secondary">{score}</span> out of <span className="font-extrabold text-primary">{totalQuestions}</span> questions!
+        </p>
+        <p className="text-slate-500 font-semibold">
+          Total Time: {minutes}m {seconds}s
+        </p>
         <button
           onClick={() => onFinish(score)}
-          className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-2xl font-bold text-xl cursor-pointer"
+          className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-2xl font-bold text-xl cursor-pointer transition-transform hover:scale-[1.02] active:scale-95 shadow-lg"
         >
           Back to Dashboard
         </button>
@@ -285,27 +367,41 @@ export default function Sprint({
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="flex justify-between items-center bg-theme-card text-slate-900 p-4 rounded-2xl shadow-sm border-2 border-theme-border">
-        <div className="flex items-center gap-4">
-          <div id="sprint-timer" className="text-2xl font-bold text-primary flex items-center gap-2">
-            <Timer className="w-6 h-6 animate-pulse" /> {minutes}:{seconds.toString().padStart(2, '0')}
+      <div className="flex flex-col bg-theme-card text-slate-900 p-4 rounded-2xl shadow-sm border-2 border-theme-border gap-3">
+        <div className="flex justify-between items-center w-full">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <div id="sprint-progress" className="text-xl font-extrabold text-primary flex items-center gap-1.5">
+                🎯 {Math.min(questionsCompleted + 1, totalQuestions)} / {totalQuestions}
+              </div>
+              <div id="sprint-timer" className="text-sm text-slate-500 font-bold flex items-center gap-1">
+                ⏱️ Time: {minutes}:{seconds.toString().padStart(2, '0')}
+                {isPaused && <span className="text-yellow-600 font-bold ml-1 animate-pulse">(Paused)</span>}
+              </div>
+            </div>
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className="px-4 py-2 bg-primary-bg hover:bg-primary/20 text-primary rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-1.5"
+            >
+              {isPaused ? <Play className="w-4 h-4 fill-primary text-primary" /> : <Pause className="w-4 h-4 fill-primary text-primary" />}
+              {isPaused ? 'Resume' : 'Pause'}
+            </button>
+            <button
+              onClick={handleExitClick}
+              className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-1.5"
+            >
+              <LogOut className="w-4 h-4" /> Exit
+            </button>
           </div>
-          <button
-            onClick={() => setIsPaused(!isPaused)}
-            className="px-4 py-2 bg-primary-bg hover:bg-primary/20 text-primary rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-1.5"
-          >
-            {isPaused ? <Play className="w-4 h-4 fill-primary text-primary" /> : <Pause className="w-4 h-4 fill-primary text-primary" />}
-            {isPaused ? 'Resume' : 'Pause'}
-          </button>
-          <button
-            onClick={handleExitClick}
-            className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-sm font-extrabold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-1.5"
-          >
-            <LogOut className="w-4 h-4" /> Exit
-          </button>
+          <div className="text-2xl font-bold text-secondary flex items-center gap-2">
+            <Trophy className="w-6 h-6 text-secondary fill-secondary-bg" /> Score: {score}
+          </div>
         </div>
-        <div className="text-2xl font-bold text-secondary flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-secondary fill-secondary-bg" /> Score: {score}
+        <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200/60">
+          <div
+            className="bg-primary h-full transition-all duration-300 rounded-full"
+            style={{ width: `${(questionsCompleted / totalQuestions) * 100}%` }}
+          />
         </div>
       </div>
 
@@ -317,19 +413,28 @@ export default function Sprint({
           </div>
         )}
 
-        {isPaused ? (
-          <div className="py-12 space-y-6 flex flex-col items-center">
-            <h3 className="text-3xl font-extrabold text-theme-title">Sprint Paused! ⏸️</h3>
-            <p className="text-xl text-slate-600 max-w-md">Take a quick breath, relax your mind, and resume when you are ready to learn.</p>
-            <button
-              onClick={() => setIsPaused(false)}
-              className="bg-primary hover:bg-primary-hover text-white font-extrabold py-4 px-8 rounded-2xl text-xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center gap-2"
-            >
-              <Play className="w-6 h-6 fill-white text-white" /> Resume Sprint
-            </button>
-          </div>
-        ) : currentQuestion && (
+        {currentQuestion && (
           <>
+            {isPaused && (
+              <div className="bg-yellow-50 border-2 border-yellow-200 text-yellow-950 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left mb-2 animate-in fade-in slide-in-from-top-3">
+                <div className="space-y-0.5">
+                  <p className="font-extrabold text-lg flex items-center justify-center sm:justify-start gap-1.5 text-yellow-800">
+                    Sprint Paused! ⏸️
+                  </p>
+                  <p className="text-sm font-semibold text-slate-600">
+                    The timer is stopped. You can read the question, then click Resume to type your answer.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPaused(false)}
+                  className="whitespace-nowrap bg-primary hover:bg-primary-hover text-white font-extrabold py-2.5 px-5 rounded-xl text-sm shadow transition-all hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Play className="w-4 h-4 fill-white text-white" /> Resume Sprint
+                </button>
+              </div>
+            )}
+
             <div className="text-sm font-extrabold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
               <HelpCircle className="w-4 h-4 text-primary" /> {currentQuestion.topic}
             </div>
@@ -390,7 +495,7 @@ export default function Sprint({
                   {!alternativeExplanation && (
                     <button
                       type="button"
-                      disabled={isExplainingLoading || isLoading}
+                      disabled={isExplainingLoading || isLoading || isPaused}
                       onClick={handleGetAlternativeExplanation}
                       className="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 disabled:opacity-50 font-bold py-3 px-4 rounded-xl text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-95 duration-200"
                     >
@@ -399,8 +504,8 @@ export default function Sprint({
                   )}
                   <button
                     type="button"
-                    onClick={loadNextQuestion}
-                    disabled={isLoading || isExplainingLoading}
+                    onClick={() => handleNextQuestion(score)}
+                    disabled={isLoading || isExplainingLoading || isPaused}
                     className="flex-1 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-95 duration-200 flex items-center justify-center gap-1.5"
                   >
                     Got it! Next question <ArrowRight className="w-5 h-5" />
@@ -415,17 +520,24 @@ export default function Sprint({
                   type="text"
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  className="w-full p-3 text-xl md:text-2xl text-center border-4 border-primary-bg rounded-2xl focus:border-primary outline-none transition-colors text-slate-900 bg-white"
-                  placeholder="Type your answer..."
-                  autoFocus
+                  disabled={isLoading || isPaused}
+                  className="w-full p-3 text-xl md:text-2xl text-center border-4 border-primary-bg rounded-2xl focus:border-primary outline-none transition-colors text-slate-900 bg-white disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200"
+                  placeholder={isPaused ? "Sprint is paused. Resume to answer!" : "Type your answer..."}
+                  autoFocus={!isPaused}
                 />
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || isPaused}
                   className="w-full bg-primary hover:bg-primary-hover text-white font-extrabold py-3 rounded-2xl text-xl shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {attempts > 0 ? <RotateCcw className="w-5 h-5 animate-spin-once" /> : null}
-                  {attempts > 0 ? "Try Again! 🔄" : "Submit 🚀"}
+                  {isPaused ? (
+                    "Paused ⏸️"
+                  ) : (
+                    <>
+                      {attempts > 0 ? <RotateCcw className="w-5 h-5 animate-spin-once" /> : null}
+                      {attempts > 0 ? "Try Again! 🔄" : "Submit 🚀"}
+                    </>
+                  )}
                 </button>
               </form>
             )}

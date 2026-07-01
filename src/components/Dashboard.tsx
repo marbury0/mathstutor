@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import Sprint from './Sprint';
 import Link from 'next/link';
 import { clearActiveUser } from '@/app/actions/user';
@@ -41,9 +41,53 @@ export default function Dashboard({
   initialRewards?: Reward[];
 }) {
   const [isSprintActive, setIsSprintActive] = useState(false);
+  const [hasSavedSprint, setHasSavedSprint] = useState(false);
+  const [timeLeftStr, setTimeLeftStr] = useState("");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isSwitching, setIsSwitching] = useState(false);
+
+  useEffect(() => {
+    const checkSaved = () => {
+      const storageKey = `maths_tutor_sprint_${user.id}`;
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const EXPIRATION_MS = 72 * 60 * 60 * 1000; // 72 hours
+          if (parsed && typeof parsed.questionsCompleted === 'number' && parsed.timestamp) {
+            const msRemaining = EXPIRATION_MS - (Date.now() - parsed.timestamp);
+            if (msRemaining <= 0) {
+              localStorage.removeItem(storageKey);
+              setHasSavedSprint(false);
+              setTimeLeftStr("");
+            } else {
+              const hoursLeft = Math.floor(msRemaining / (1000 * 60 * 60));
+              const minsLeft = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
+              let str = "";
+              if (hoursLeft > 0) {
+                str = `${hoursLeft}h ${minsLeft}m left to resume`;
+              } else {
+                str = `${minsLeft}m left to resume`;
+              }
+              setTimeLeftStr(str);
+              setHasSavedSprint(true);
+              return;
+            }
+            return;
+          }
+        } catch (e) {
+          console.error("Error reading saved sprint state:", e);
+        }
+      }
+      setHasSavedSprint(false);
+      setTimeLeftStr("");
+    };
+
+    checkSaved();
+    const interval = setInterval(checkSaved, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, [user.id, isSprintActive]);
 
   const handleSprintFinish = () => {
     setIsSprintActive(false);
@@ -62,7 +106,7 @@ export default function Dashboard({
   if (isSprintActive) {
     return (
       <div className="min-h-screen py-12 px-4">
-        <Sprint onFinish={handleSprintFinish} isTestMode={isTestMode} tutorName={user.tutorName || "Maths Bot"} sprintDuration={user.sprintDuration || 900} />
+        <Sprint userId={user.id} onFinish={handleSprintFinish} isTestMode={isTestMode} tutorName={user.tutorName || "Maths Bot"} sprintDuration={user.sprintDuration || 900} />
       </div>
     );
   }
@@ -122,8 +166,13 @@ export default function Dashboard({
               onClick={() => setIsSprintActive(true)}
               className="w-full bg-primary hover:bg-primary-hover text-white font-extrabold py-4 rounded-2xl text-xl shadow-lg transform transition hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2 mt-auto"
             >
-              Start Sprint! 🚀
+              {hasSavedSprint ? 'Continue Sprint! 🚀' : 'Start Sprint! 🚀'}
             </button>
+            {hasSavedSprint && timeLeftStr && (
+              <p className="text-xs text-slate-500 font-bold mt-2 flex items-center justify-center gap-1 select-none">
+                ⏱️ {timeLeftStr} (inactivity limit)
+              </p>
+            )}
           </section>
 
           <section className="bg-theme-card text-slate-900 p-8 rounded-3xl shadow-lg border-4 border-secondary/40 flex flex-col items-center text-center space-y-6">

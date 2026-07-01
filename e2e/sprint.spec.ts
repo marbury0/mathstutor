@@ -19,15 +19,19 @@ test.describe('Sprint Adaptive Learning Loop', () => {
     await expect(page.getByRole('heading', { name: 'Welcome back, Danny!' })).toBeVisible({ timeout: 15000 });
   });
 
-  test('should start sprint with 15-minute timer and correct UI header details', async ({ page }) => {
+  test('should start sprint with 15-question target and correct UI header details', async ({ page }) => {
     // Click Start Sprint
     await page.getByRole('button', { name: 'Start Sprint! 🚀' }).click();
 
-    // Verify timer starts at 15 minutes (15:00 or 14:59)
+    // Verify progress starts at 1 / 15
+    const progressText = page.locator('#sprint-progress');
+    await expect(progressText).toBeVisible();
+    await expect(progressText).toContainText('1 / 15');
+
+    // Verify timer starts at 0:00
     const timerText = page.locator('#sprint-timer');
     await expect(timerText).toBeVisible();
-    const timerValue = await timerText.innerText();
-    expect(timerValue).toMatch(/^(15:00|14:\d{2})$/);
+    await expect(timerText).toContainText('Time: 0:0');
 
     // Verify score starts at 0
     await expect(page.getByText('Score: 0')).toBeVisible();
@@ -147,5 +151,32 @@ test.describe('Sprint Adaptive Learning Loop', () => {
 
     // Verify "Explain in another way! 💡" button is hidden now that alternative explanation is displayed
     await expect(page.getByRole('button', { name: 'Explain in another way! 💡' })).not.toBeVisible();
+  });
+
+  test('should allow resuming a sprint when the page is reloaded', async ({ page }) => {
+    // 1. Click Start Sprint
+    await page.getByRole('button', { name: 'Start Sprint! 🚀' }).click();
+
+    // 2. Answer first question correctly
+    await page.getByPlaceholder('Type your answer...').fill('4');
+    await page.getByRole('button', { name: 'Submit 🚀' }).click();
+
+    // Verify progress shows 2 / 15 and score is 1
+    const progressText = page.locator('#sprint-progress');
+    await expect(progressText).toContainText('2 / 15');
+    await expect(page.getByText('Score: 1')).toBeVisible();
+
+    // 3. Reload the page (simulating browser crash/refresh)
+    await page.reload();
+
+    // 4. Verify the dashboard button now says "Continue Sprint! 🚀"
+    await expect(page.getByRole('button', { name: 'Continue Sprint! 🚀' })).toBeVisible();
+
+    // 5. Click Continue Sprint!
+    await page.getByRole('button', { name: 'Continue Sprint! 🚀' }).click();
+
+    // 6. Verify state is restored (progress 2 / 15, score 1)
+    await expect(progressText).toContainText('2 / 15');
+    await expect(page.getByText('Score: 1')).toBeVisible();
   });
 });

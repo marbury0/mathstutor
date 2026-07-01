@@ -19,12 +19,12 @@ export async function createUser(data: {
 }) {
   console.log('Creating user with data:', data);
   try {
-    // Default to recommended sprint duration in seconds:
-    let defaultDuration = 900; // 15 mins for Year 5-6
+    // Default to recommended sprint questions:
+    let defaultQuestions = 15; // 15 questions for Year 5-6
     if (data.yearGroup <= 2) {
-      defaultDuration = 300;   // 5 mins for Year 1-2
+      defaultQuestions = 5;    // 5 questions for Year 1-2
     } else if (data.yearGroup <= 4) {
-      defaultDuration = 600;   // 10 mins for Year 3-4
+      defaultQuestions = 10;   // 10 questions for Year 3-4
     }
 
     const user = await prisma.user.create({
@@ -37,7 +37,7 @@ export async function createUser(data: {
         avatar: data.avatar || "🐱",
         hobbies: JSON.stringify(data.hobbies),
         pets: JSON.stringify(data.pets),
-        sprintDuration: defaultDuration,
+        sprintDuration: defaultQuestions,
       },
     });
     console.log('User created successfully:', user.id);
