@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+.env
+.env*.local
+maths_tutor.db
+maths_tutor_test.db
+.git
+README.md

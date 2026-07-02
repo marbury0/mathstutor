@@ -2,10 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
 const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL || 'file:./data/maths_tutor.db'
+  url: process.env.DATABASE_URL || 'file:./data/maths_tutor.db',
 });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const prisma = new PrismaClient({ adapter } as any);
+const prisma = new PrismaClient({ adapter });
 
 const CURRICULUM: Record<number, string[]> = {
   1: ["Number Bonds within 20", "Counting to 100", "Addition and Subtraction (within 20)", "Fractions (1/2 and 1/4)", "2D and 3D Shapes", "Time and Dates"],

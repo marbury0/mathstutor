@@ -4,7 +4,7 @@
 - [x] **Curriculum Flexibility**: Year-group specific topic seeding (Year 1 to Year 6).
 - [x] **Adaptive Difficulty Scaling**: 1-10 difficulty leveling within topics based on streaks.
 - [x] **Error Type Analysis**: AI-driven misconception diagnosis and advice.
-- [ ] **Technical Hardening**: User-session isolation and answer normalization for currencies/decimals.
+- [x] **Technical Hardening**: User-session isolation and answer normalization for currencies/decimals.
 
 ## Medium Priority
 - [ ] **Avatar System (UI)**: Character selection screen and evolution animations.
@@ -17,3 +17,4 @@
 - [x] Spaced Repetition Logic.
 - [x] Gemini 3.5 Flash Integration.
 - [x] Automated AI Quality Auditing Suite.
+- [x] GCP Cloud Run & IAP Secure Deployment.
