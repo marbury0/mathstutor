@@ -12,7 +12,7 @@ ERROR CATEGORIES (Select the single best match):
 3. Place Value Error (e.g., confused tens and ones, misaligned columns)
 4. Incomplete Process (e.g., forgot the final step of a multi-step problem)
 5. Unit Conversion Error (e.g., converted cm to m incorrectly)
-6. Concept Misunderstanding (e.g., misunderstood fraction representation; default fallback)
+6. Concept Misunderstanding / Unrelated Input (e.g., misunderstood the general concept, typed random characters, or submitted an empty response; default fallback)
 
 CONSTRAINTS:
 - Keep the output completely child-safe, encouraging, and supportive.
@@ -22,5 +22,5 @@ CONSTRAINTS:
 OUTPUT SCHEMA:
 {
   "misconception": "A short, precise description of the diagnosed error type (e.g., 'Place Value Misalignment')",
-  "advice": "A one-sentence, friendly tip written directly to the child helper to avoid this mistake next time (e.g., 'Remember to count your tens first!')"
+  "advice": "A one-sentence, friendly tip written directly to the child to help them avoid this mistake next time (e.g., 'Remember to count your tens first!')"
 }

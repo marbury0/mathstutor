@@ -8,7 +8,8 @@ INPUT DATA:
 VALIDATION RULES:
 1. Solve the math problem step-by-step to find the correct answer.
 2. Determine if the reported answer is mathematically correct and equivalent to your solution.
-3. Accept alternate representations, spacing variations, appropriate units, or spelled-out numbers if they are correct (e.g. "5cm", "5 cm", "5", "five" are equivalent for 5cm).
+3. Accept alternate representations, spacing variations, appropriate units, or spelled-out numbers if they are correct (e.g., "5cm", "5 cm", "5", "five" are equivalent for 5cm).
+4. For currency, accept standard equivalent values (e.g., "£2.50", "2.50", "2.5", "250p").
 
 OUTPUT:
 - Output ONLY the word "YES" if it is correct.
