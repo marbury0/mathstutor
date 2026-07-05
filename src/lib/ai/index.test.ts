@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateQuestion, getAdaptiveHint, getAlternativeExplanation } from './ai';
+import { generateQuestion, getAdaptiveHint, getAlternativeExplanation } from './index';
 
 describe('AI Tutor Personalization (tutorName)', () => {
   const testProfile = {

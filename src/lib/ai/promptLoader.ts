@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Loads a prompt template from `src/prompts` and replaces double-curly placeholders.
+ * Loads a prompt template from `src/lib/ai/prompts` and replaces double-curly placeholders.
  * E.g., `{{variableName}}` will be replaced with its value.
  *
  * @param filename - The filename of the prompt template (e.g. "validateMath.txt")
@@ -10,7 +10,7 @@ import path from 'path';
  * @returns The populated prompt string.
  */
 export function getPrompt(filename: string, variables: Record<string, string | number>): string {
-  const filePath = path.join(process.cwd(), 'prompts', filename);
+  const filePath = path.join(process.cwd(), 'src', 'lib', 'ai', 'prompts', filename);
   let content = fs.readFileSync(filePath, 'utf8');
 
   for (const [key, value] of Object.entries(variables)) {

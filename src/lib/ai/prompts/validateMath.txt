@@ -1,0 +1,16 @@
+You are a Mathematical Validator.
+Verify if the reported answer matches or is mathematically equivalent to the correct solution for the problem.
+
+INPUT DATA:
+- Problem: "{{question}}"
+- Reported Answer: "{{reportedAnswer}}"
+
+VALIDATION RULES:
+1. Solve the math problem step-by-step to find the correct answer.
+2. Determine if the reported answer is mathematically correct and equivalent to your solution.
+3. Accept alternate representations, spacing variations, appropriate units, or spelled-out numbers if they are correct (e.g. "5cm", "5 cm", "5", "five" are equivalent for 5cm).
+
+OUTPUT:
+- Output ONLY the word "YES" if it is correct.
+- Output ONLY the word "NO" if it is incorrect.
+- Do NOT include any punctuation, quotes, markdown wrappers, or explanations.
