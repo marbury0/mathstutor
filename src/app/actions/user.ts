@@ -258,9 +258,29 @@ export async function getSessionQuestions(sessionId: string) {
     throw new Error("Session not found or unauthorized");
   }
 
+  // Find the previous session of this user to avoid overlapping queries
+  const previousSession = await prisma.session.findFirst({
+    where: {
+      userId: user.id,
+      date: {
+        lt: session.date,
+      },
+    },
+    orderBy: {
+      date: 'desc',
+    },
+  });
+
+  const previousSessionDate = previousSession ? new Date(previousSession.date) : new Date(0);
+
   // Calculate session start and end times
   const endTime = new Date(session.date);
-  const startTime = new Date(endTime.getTime() - (session.duration * 1000) - 10000); // 10s grace period
+  // Add a generous buffer (e.g. 10 minutes) to the duration to account for loading times, thinking, and explanations
+  const bufferMs = 10 * 60 * 1000;
+  const calculatedStart = new Date(endTime.getTime() - (session.duration * 1000) - bufferMs);
+
+  // Start time is bounded by the previous session date to ensure we don't fetch questions from a prior session
+  const startTime = new Date(Math.max(calculatedStart.getTime(), previousSessionDate.getTime() + 1000));
 
   // Fetch all question history records for the user's topics that were answered within the session window
   const questions = await prisma.questionHistory.findMany({
