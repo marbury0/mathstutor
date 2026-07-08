@@ -1,51 +1,83 @@
-# Maths Tutor AI - Personal GCP Deployment Guide
+# Maths Tutor AI - Personal GCP Free Tier Deployment Guide
 
-This guide describes how to deploy the **Maths Tutor AI** application on a **personal, free-tier GCP profile** (using a personal `@gmail.com` account) in the **London (`europe-west2`)** region, while keeping costs at **$0/month**.
-
----
-
-## ⚠️ CRITICAL: Keeping it Free in `europe-west2`
-
-Google Cloud's **Always Free VM Tier** (which covers one `e2-micro` instance) is strictly limited to three US regions: `us-central1`, `us-east1`, and `us-west1`. 
-* **If you deploy a VM (Compute Engine) in `europe-west2`, you will be billed ~£8-9/month** (or it will consume your temporary $300 signup credits).
-* **If you must deploy in `europe-west2` and want it 100% free forever, you MUST use Option B (Google Cloud Run + Serverless PostgreSQL)**. Cloud Run's free tier (2 million requests/month) is active globally, including in `europe-west2`.
+This guide describes how to deploy the **Maths Tutor AI** application on a **personal, free-tier GCP profile** (using a personal `@gmail.com` account) in the **London (`europe-west2`)** region for **£0/month**.
 
 ---
 
-## 🏗️ Comparison: Option A vs. Option B
+## 🏗️ Architecture Design (100% Free Tier in `europe-west2`)
 
-| Feature | Option A (GCP VM + SQLite) | Option B (Cloud Run + Postgres) |
-| :--- | :--- | :--- |
-| **GCP Region** | **US Regions only** (for $0 free tier) | **`europe-west2` (London)** (or any region, $0 free tier) |
-| **GCP Resources** | `e2-micro` Compute Instance | Cloud Run (Free tier) + IAP |
-| **Database** | Local SQLite (Stored on persistent VM disk) | PostgreSQL (External Neon/Supabase Free Tier) |
-| **Code Changes** | None (Runs out-of-the-box) | Change Prisma provider to `postgresql` |
-| **Securing Access** | Restricted IP Firewall or Caddy Basic Auth | Google Account Login (IAP) |
-| **Cost in `europe-west2`**| **~£8-9/month** (Not Free) | **£0/month (100% Free)** |
+Google Cloud's Always Free VM (`e2-micro`) is strictly limited to US regions. To deploy in London (`europe-west2`) completely for free, we use a serverless architecture:
+
+*   **Google Cloud Run (Serverless)**: Cloud Run's free tier includes 2 million requests per month globally, including `europe-west2`.
+*   **Identity-Aware Proxy (IAP)**: GCP's native proxy protects the application, allowing access only to specific authorized Google accounts.
+*   **External Serverless PostgreSQL**: Since Cloud Run is stateless and ephemeral, we use a **100% free-tier external PostgreSQL database** (such as Neon or Supabase) to persist all student profiles, streaks, and study logs.
 
 ---
 
-## ⚡ Option B: Google Cloud Run + Serverless PostgreSQL (London Region, 100% Free)
+## 1. Step 1: Local Terminal Setup & GCP CLI Login
 
-This option uses Google Cloud Run in `europe-west2` combined with a **100% free-tier external PostgreSQL database** (which has a $0/month free tier on Neon or Supabase) to persist SQLite-like data.
+Before deploying, ensure you have the Google Cloud SDK (`gcloud` CLI) installed locally.
 
-### Step 1: Set Up your Free PostgreSQL Database
+1. **Authenticate your Google account:**
+   ```bash
+   gcloud auth login
+   ```
+   *This opens a browser window. Log in using your personal `@gmail.com` account.*
+
+2. **Retrieve your target Project ID:**
+   ```bash
+   gcloud projects list
+   ```
+
+3. **Set your active project:**
+   ```bash
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+   *(Replace `YOUR_PROJECT_ID` with the correct ID).*
+
+4. **Enable the required GCP APIs:**
+   ```bash
+   gcloud services enable run.googleapis.com iap.googleapis.com
+   ```
+
+---
+
+## 2. Step 2: Configure Google OAuth Consent Screen & Test Users (CRITICAL)
+
+Because you are using a personal Gmail account, GCP does not allow you to select "Internal" for the OAuth consent screen. You must use "External" and explicitly register yourself and any family members as test users.
+
+1. Open the [Google Cloud Console](https://console.cloud.google.com/).
+2. Navigate to **APIs & Services** ➔ **OAuth consent screen**.
+3. Choose **External** and click **Create**.
+4. Fill in the required fields:
+   * **App Name:** `Maths Tutor AI`
+   * **User support email:** Choose your Gmail address.
+   * **Developer contact email:** Choose your Gmail address.
+5. Click **Save and Continue** until you reach the **Test Users** screen.
+6. **Under Test Users (CRITICAL):**
+   * Click **+ Add Users**.
+   * Enter your personal Gmail address, plus any child or partner Gmail addresses that will access the application.
+   * Click **Save**.
+   * *Note: If a Gmail account is not added here, IAP will block them with an authorization error.*
+7. Keep the app publishing status as **Testing**. Do *not* submit it for verification.
+
+---
+
+## 3. Step 3: Set Up a Free Serverless Database
+
 1. Go to [Neon.tech](https://neon.tech/) or [Supabase.com](https://supabase.com/) and create a free project.
-2. When creating the database, choose the **London (`eu-west-2`)** or nearest European region to minimize latency.
+2. Select **London (`eu-west-2`)** or the nearest European region for the database location to minimize latency.
 3. Copy your connection string. Example:
    ```env
    DATABASE_URL="postgresql://username:password@ep-xxxxxx.eu-west-2.aws.neon.tech/neondb?sslmode=require"
    ```
 
-### Step 2: Configure OAuth Consent Screen & Test Users (For IAP Login)
-Because the app will be exposed publicly, we use GCP's Identity-Aware Proxy (IAP) to prompt for Google Login.
-1. In the Google Cloud Console, navigate to **APIs & Services** ➔ **OAuth consent screen**.
-2. Select **External** and fill in the app name (`Maths Tutor AI`) and contact email.
-3. Under **Test Users**, add your personal `@gmail.com` address and the Google accounts of any family members who need access.
-4. Keep the publishing status as **Testing**.
+---
 
-### Step 3: Modify Code for PostgreSQL Provider
+## 4. Step 4: Modify Code for PostgreSQL Provider
+
 Since Prisma defaults to SQLite in this codebase, you must tell it to use PostgreSQL:
+
 1. Open [prisma/schema.prisma](file:///home/tim/Documents/Dev/marbury0/maths_tutor/prisma/schema.prisma) and change lines 5-7 to:
    ```prisma
    datasource db {
@@ -55,122 +87,44 @@ Since Prisma defaults to SQLite in this codebase, you must tell it to use Postgr
    ```
 2. Initialize the database schema and default curriculum:
    ```bash
-   DATABASE_URL="your-postgresql-url" npx prisma db push
-   DATABASE_URL="your-postgresql-url" npx prisma db seed
+   DATABASE_URL="your-postgresql-connection-uri" npx prisma db push
+   DATABASE_URL="your-postgresql-connection-uri" npx prisma db seed
    ```
    *(Note: The database connection files `src/lib/prisma.ts` and `prisma/seed.ts` have already been updated to dynamically handle SQLite/PostgreSQL depending on the URL scheme, so no other code changes are needed).*
 
-### Step 4: Deploy Using `deploy.sh`
-Run the included deployment script:
+---
+
+## 5. Step 5: Run the Deployment
+
+Run the automated deployment script in the project repository:
+
 ```bash
 ./deploy/deploy.sh
 ```
+
 Provide the required details when prompted:
 * **GCP Project ID**
-* **GCP Region**: Enter `europe-west2` (London)
+* **GCP Region**: Enter `europe-west2`
 * **Google Email**: (to authorize via IAP)
 * **Gemini API Key**
 * **DATABASE_URL**: (your Neon or Supabase PostgreSQL connection string)
 
-The script will automatically enable IAP and deploy the app to Cloud Run in London. Only the Google Accounts you authorize will be able to log in and access the application.
+The script will automatically enable IAP and deploy the app to Cloud Run in London.
 
 ---
 
-## 🛠️ Option A: Compute Engine VM (e2-micro) + Local SQLite (US Region, 100% Free)
+## 6. Step 6: Managing Family Access
 
-If you are willing to host the application in a US region (e.g. `us-central1-a`) to keep it **100% free** while using SQLite (with zero code modifications), follow this route.
+To allow other family members (e.g., your child) to access the app:
 
-### Step 1: Local Terminal Setup & VM Provisioning
-1. **Authenticate and set up your project:**
+1. Ensure their Google accounts are added to the **Test Users** list in the **OAuth consent screen** (see Step 2).
+2. Grant them the IAP Web App User role using the following command:
    ```bash
-   gcloud auth login
-   gcloud config set project YOUR_PROJECT_ID
+   gcloud iap web add-iam-policy-binding \
+     --member="user:family-member@gmail.com" \
+     --role="roles/iap.httpsResourceAccessor" \
+     --resource-type="cloud-run" \
+     --service="maths-tutor" \
+     --region="europe-west2"
    ```
-2. **Enable Compute Engine API:**
-   ```bash
-   gcloud services enable compute.googleapis.com
-   ```
-3. **Provision the Free Tier VM (Must be in a US Region):**
-   ```bash
-   gcloud compute instances create mathstutor-personal \
-       --zone=us-central1-a \
-       --machine-type=e2-micro \
-       --image-family=ubuntu-2204-lts \
-       --image-project=ubuntu-os-cloud \
-       --boot-disk-size=30GB \
-       --boot-disk-type=pd-standard \
-       --tags=http-server,https-server
-   ```
-
-### Step 2: Restrict Access via Firewall
-Since the app doesn't have built-in login pages, you should restrict access to your home IP address:
-1. **Get your current public IP:** run `curl ifconfig.me` or visit [whatsmyip.org](https://www.whatsmyip.org).
-2. **Create a firewall rule restricting access to your IP:**
-   ```bash
-   gcloud compute firewall-rules create allow-mathstutor-my-ip-only \
-       --direction=INGRESS \
-       --priority=900 \
-       --action=ALLOW \
-       --rules=tcp:80,tcp:443 \
-       --source-ranges=YOUR_IP_ADDRESS/32 \
-       --target-tags=mathstutor-restricted
-   ```
-3. **Add the tag to your VM and remove the public tags:**
-   ```bash
-   gcloud compute instances add-tags mathstutor-personal --zone=us-central1-a --tags=mathstutor-restricted
-   gcloud compute instances remove-tags mathstutor-personal --zone=us-central1-a --tags=http-server,https-server
-   ```
-
-### Step 3: Server Setup & Run App
-1. **SSH into your VM:**
-   ```bash
-   gcloud compute ssh mathstutor-personal --zone=us-central1-a
-   ```
-2. **Install Node.js & Git on the VM:**
-   ```bash
-   sudo apt update
-   sudo apt install -y nodejs npm git
-   ```
-3. **Clone the code & build:**
-   ```bash
-   git clone <your-repository-url> /home/ubuntu/maths_tutor
-   cd /home/ubuntu/maths_tutor
-   npm install
-   ```
-4. **Set up your Environment Variables:**
-   ```bash
-   nano /home/ubuntu/maths_tutor/.env
-   ```
-   Add your API keys and configuration:
-   ```env
-   GEMINI_API_KEY="your-google-gemini-api-key"
-   DATABASE_URL="file:./data/maths_tutor.db"
-   MOCK_AI=false
-   PORT=3000
-   ```
-5. **Initialize SQLite database:**
-   ```bash
-   npx prisma db push
-   npm run seed
-   ```
-6. **Build and Run (using PM2 to keep it running in the background):**
-   ```bash
-   sudo npm install -g pm2
-   npm run build
-   pm2 start npm --name "maths-tutor" -- run start
-   pm2 save
-   pm2 startup
-   ```
-7. **(Optional) Configure Caddy for Reverse Proxy:**
-   To serve the app cleanly over port 80/443 without appending `:3000` to the IP:
-   ```bash
-   sudo apt install -y caddy
-   ```
-   Edit `/etc/caddy/Caddyfile` and replace the default config with:
-   ```caddy
-   :80 {
-       reverse_proxy localhost:3000
-   }
-   ```
-   Restart Caddy: `sudo systemctl restart caddy`.
-   You can now access your app at `http://<YOUR_VM_PUBLIC_IP>`.
+3. Share the Cloud Run URL (printed at the end of the deployment script) with them. They will be prompted to log in using their Google account.
