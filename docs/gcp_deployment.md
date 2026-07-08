@@ -21,10 +21,10 @@ graph TD
 
 ## ⚡ Deployment in 5 Minutes (Automated)
 
-We have created an automated deployment script `deploy.sh` in the root of the project. To deploy, simply run:
+We have created an automated deployment script `deploy.sh` in the `deploy/` directory. To deploy, simply run:
 
 ```bash
-./deploy.sh
+./deploy/deploy.sh
 ```
 
 The script will prompt you for:

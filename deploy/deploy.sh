@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Ensure we run from the project root directory (one level up from this script)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
 echo "=================================================="
 echo "🚀 Maths Tutor AI - GCP Cloud Run Deployment Script"
 echo "=================================================="
@@ -40,7 +44,7 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
-echo -e "\n=================================================="
+echo -v "\n=================================================="
 echo "⚙️ Configuring Google Cloud SDK..."
 echo "=================================================="
 

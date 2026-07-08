@@ -1,10 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL || 'file:./data/maths_tutor.db',
-});
-const prisma = new PrismaClient({ adapter });
+const url = process.env.DATABASE_URL || 'file:./data/maths_tutor.db';
+
+const getPrismaInstance = () => {
+  if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
+    return new PrismaClient();
+  }
+  const adapter = new PrismaBetterSqlite3({ url });
+  return new PrismaClient({ adapter });
+};
+
+const prisma = getPrismaInstance();
 
 const CURRICULUM: Record<number, string[]> = {
   1: ["Number Bonds within 20", "Counting to 100", "Addition and Subtraction (within 20)", "Fractions (1/2 and 1/4)", "2D and 3D Shapes", "Time and Dates"],
