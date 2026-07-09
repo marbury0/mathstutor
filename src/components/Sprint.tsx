@@ -176,6 +176,11 @@ export default function Sprint({
     onFinish(score);
   };
 
+  const handlePauseAndExit = () => {
+    isSessionEnding.current = true;
+    onFinish(score);
+  };
+
   const handleCancelExit = () => {
     setShowExitModal(false);
     setIsPaused(false);
@@ -555,10 +560,16 @@ export default function Sprint({
             </p>
             <div className="flex flex-col gap-3">
               <button
+                onClick={handlePauseAndExit}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 px-4 rounded-xl shadow transition-colors cursor-pointer text-base flex items-center justify-center gap-1.5"
+              >
+                <Pause className="w-5 h-5" /> Pause & Exit (Resume Later)
+              </button>
+              <button
                 onClick={handleSaveAndExit}
                 className="w-full bg-primary hover:bg-primary-hover text-white font-extrabold py-3 px-4 rounded-xl shadow transition-colors cursor-pointer text-base flex items-center justify-center gap-1.5"
               >
-                <Save className="w-5 h-5" /> Save & Exit
+                <Save className="w-5 h-5" /> Finish & Submit Session
               </button>
               <button
                 onClick={handleDiscardAndExit}

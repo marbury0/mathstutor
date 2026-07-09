@@ -3,7 +3,7 @@ import { getPrompt } from "./promptLoader";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({
-  model: "gemini-3.5-flash",
+  model: "gemini-2.5-flash",
   safetySettings: [
     {
       category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -23,6 +23,33 @@ const model = genAI.getGenerativeModel({
     },
   ]
 });
+
+/**
+ * Helper to call model.generateContent with exponential backoff on 503/overloaded errors.
+ */
+async function generateContentWithRetry(prompt: string, attempts = 3, initialDelay = 2000): Promise<any> {
+  let delay = initialDelay;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await model.generateContent(prompt);
+    } catch (error: any) {
+      const errorMsg = String(error?.message || error || "");
+      const is503 = errorMsg.includes("503") || 
+                    errorMsg.includes("high demand") || 
+                    errorMsg.includes("Overloaded") || 
+                    errorMsg.includes("Service Unavailable") ||
+                    errorMsg.includes("Resource exhausted");
+      
+      if (is503 && i < attempts - 1) {
+        console.warn(`Gemini API overloaded/high demand. Retrying in ${delay}ms... (Attempt ${i + 1}/${attempts})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+      } else {
+        throw new Error(`[Failed after ${attempts} retries] ${errorMsg}`);
+      }
+    }
+  }
+}
 
 /**
  * Cleans LaTeX mathematics notation from text and replaces them with standard readable symbols.
@@ -72,7 +99,7 @@ async function validateMath(question: string, reportedAnswer: string): Promise<b
     reportedAnswer,
   });
 
-  const result = await model.generateContent(prompt);
+  const result = await generateContentWithRetry(prompt);
   const response = result.response.text().trim().toLowerCase().replace(/[^a-z]/g, "");
   if (response === "yes" || response.startsWith("yes")) {
     return true;
@@ -128,7 +155,7 @@ export async function generateQuestion(
 
   let attempts = 0;
   while (attempts < 3) {
-    const result = await model.generateContent(prompt);
+    const result = await generateContentWithRetry(prompt);
     const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
     const data = JSON.parse(jsonStr);
     data.answer = String(data.answer); // Force to string to prevent client-side .trim() crashes if model outputs a number
@@ -175,7 +202,7 @@ export async function getAdaptiveHint(
     question,
     correctAnswer,
   });
-  const result = await model.generateContent(prompt);
+  const result = await generateContentWithRetry(prompt);
   return cleanMathText(result.response.text());
 }
 
@@ -202,7 +229,7 @@ export async function diagnoseError(
     correctAnswer,
   });
 
-  const result = await model.generateContent(prompt);
+  const result = await generateContentWithRetry(prompt);
   const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
   const diagnosis = JSON.parse(jsonStr);
   return {
@@ -227,7 +254,7 @@ export async function getAlternativeExplanation(
     explanation,
     question,
   });
-  const result = await model.generateContent(prompt);
+  const result = await generateContentWithRetry(prompt);
   return cleanMathText(result.response.text());
 }
 
@@ -288,7 +315,7 @@ export async function generateWeeklyInsights(
   });
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await generateContentWithRetry(prompt);
     const jsonStr = result.response.text().replace(/```json|```/g, "").trim();
     const data = JSON.parse(jsonStr);
     return {
