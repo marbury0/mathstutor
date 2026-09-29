@@ -16,13 +16,14 @@ interface User {
   sprintDuration?: number | null;
 }
 
-export default function EditProfileForm({ user }: { user: User }) {
+export default function EditProfileForm({ user, currentDifficulty = 3 }: { user: User; currentDifficulty?: number }) {
   const [name, setName] = useState(user.name);
   const [age, setAge] = useState(user.age);
   const [yearGroup, setYearGroup] = useState(user.yearGroup);
   const [tutorName, setTutorName] = useState(user.tutorName || 'Maths Bot');
   const [theme, setTheme] = useState(user.theme || 'ocean');
   const [avatar, setAvatar] = useState(user.avatar || '🐱');
+  const [difficultyLevel, setDifficultyLevel] = useState(currentDifficulty);
   const [sprintQuestions, setSprintQuestions] = useState(() => {
     const dbVal = user.sprintDuration || 15;
     if (dbVal >= 60) {
@@ -104,6 +105,7 @@ export default function EditProfileForm({ user }: { user: User }) {
         theme,
         avatar,
         sprintDuration: sprintQuestions,
+        difficultyLevel,
       });
       setMessage({ text: 'Profile updated successfully! 🎉', type: 'success' });
       setTimeout(() => setMessage(null), 3000);
@@ -201,6 +203,30 @@ export default function EditProfileForm({ user }: { user: User }) {
             <option value={25}>25 questions</option>
             <option value={30}>30 questions</option>
           </select>
+        </div>
+
+        <div className="space-y-1 border-t pt-4 border-slate-100">
+          <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide block">Question Difficulty 🧭</label>
+          <select
+            value={difficultyLevel}
+            onChange={(e) => setDifficultyLevel(parseInt(e.target.value, 10))}
+            className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-primary outline-none text-slate-900 bg-white font-medium cursor-pointer"
+            disabled={isSaving}
+          >
+            <option value={1}>1 — Very gentle</option>
+            <option value={2}>2 — Gentle practice</option>
+            <option value={3}>3 — Building confidence</option>
+            <option value={4}>4 — Supported Year {yearGroup}</option>
+            <option value={5}>5 — Secure Year {yearGroup}</option>
+            <option value={6}>6 — More challenging</option>
+            <option value={7}>7 — Challenging</option>
+            <option value={8}>8 — Very challenging</option>
+            <option value={9}>9 — Advanced</option>
+            <option value={10}>10 — Stretch</option>
+          </select>
+          <p className="text-xs text-slate-500 font-medium">
+            Sets the starting level for all {`Year ${yearGroup}`} topics and stops the current topics being too difficult.
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

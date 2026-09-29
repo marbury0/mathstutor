@@ -58,6 +58,7 @@ model QuestionHistory {
   questionText  String?  // Stores the generated question
   userAnswer    String?  // Stores what the student typed
   correctAnswer String?  // Stores the correct target answer
+  supportLevel  String   @default("unknown") // independent, hint, parent_help, parent_answered, unknown
   misconception String?  // Stores diagnosed error type
   advice        String?  // Advice for that specific error
   answeredAt    DateTime @default(now())
@@ -96,4 +97,3 @@ model WeeklyInsight {
 
   @@unique([userId, weekStart])
 }
-

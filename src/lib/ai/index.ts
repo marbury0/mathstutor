@@ -1,54 +1,113 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { Anthropic } from "@anthropic-ai/sdk";
+import { OpenAI } from "openai";
 import { getPrompt } from "./promptLoader";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
-  safetySettings: [
-    {
-      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    },
-  ]
-});
+// Lazy initialize clients to avoid throw on load if keys are missing
+let geminiModel: ReturnType<GoogleGenerativeAI["getGenerativeModel"]> | null = null;
+let anthropicClient: Anthropic | null = null;
+let openaiClient: OpenAI | null = null;
+
+function getGeminiModel() {
+  if (!geminiModel) {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+    geminiModel = genAI.getGenerativeModel({
+      model: process.env.LLM_MODEL || "gemini-2.5-flash",
+      safetySettings: [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+      ]
+    });
+  }
+  return geminiModel;
+}
+
+function getAnthropicClient() {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY || "",
+    });
+  }
+  return anthropicClient;
+}
+
+function getOpenaiClient() {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || "",
+    });
+  }
+  return openaiClient;
+}
 
 /**
- * Helper to call model.generateContent with exponential backoff on 503/overloaded errors.
+ * Helper to call the active AI model with exponential backoff on 503/overloaded/rate-limited errors.
  */
-async function generateContentWithRetry(prompt: string, attempts = 3, initialDelay = 2000): Promise<any> {
+async function generateContentWithRetry(prompt: string, attempts = 3, initialDelay = 2000): Promise<{ response: { text: () => string } }> {
+  const provider = (process.env.LLM_PROVIDER || "gemini").toLowerCase();
   let delay = initialDelay;
+
   for (let i = 0; i < attempts; i++) {
     try {
-      return await model.generateContent(prompt);
-    } catch (error: any) {
-      const errorMsg = String(error?.message || error || "");
-      const is503 = errorMsg.includes("503") || 
-                    errorMsg.includes("high demand") || 
-                    errorMsg.includes("Overloaded") || 
-                    errorMsg.includes("Service Unavailable") ||
-                    errorMsg.includes("Resource exhausted");
+      let responseText = "";
+
+      if (provider === "anthropic") {
+        const client = getAnthropicClient();
+        const modelName = process.env.LLM_MODEL || "claude-3-5-haiku-20241022";
+        const message = await client.messages.create({
+          max_tokens: 1024,
+          messages: [{ role: "user", content: prompt }],
+          model: modelName,
+        });
+        responseText = message.content
+          .filter((c): c is Anthropic.TextBlock => c.type === "text")
+          .map((c) => c.text)
+          .join("");
+
+      } else if (provider === "openai") {
+        const client = getOpenaiClient();
+        const modelName = process.env.LLM_MODEL || "gpt-4o-mini";
+        const completion = await client.chat.completions.create({
+          model: modelName,
+          messages: [{ role: "user", content: prompt }],
+        });
+        responseText = completion.choices[0]?.message?.content || "";
+
+      } else {
+        // Default to Gemini
+        const model = getGeminiModel();
+        const result = await model.generateContent(prompt);
+        responseText = result.response.text();
+      }
+
+      return {
+        response: {
+          text: () => responseText
+        }
+      };
+
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : String(error || "");
+      const isRetryable = errorMsg.includes("503") || 
+                          errorMsg.includes("429") ||
+                          errorMsg.includes("high demand") || 
+                          errorMsg.includes("Overloaded") || 
+                          errorMsg.includes("Service Unavailable") ||
+                          errorMsg.includes("Resource exhausted") ||
+                          errorMsg.includes("rate_limit_exceeded");
       
-      if (is503 && i < attempts - 1) {
-        console.warn(`Gemini API overloaded/high demand. Retrying in ${delay}ms... (Attempt ${i + 1}/${attempts})`);
+      if (isRetryable && i < attempts - 1) {
+        console.warn(`[${provider.toUpperCase()}] API overloaded/rate-limited. Retrying in ${delay}ms... (Attempt ${i + 1}/${attempts})`);
         await new Promise(resolve => setTimeout(resolve, delay));
         delay *= 2; // Exponential backoff
       } else {
-        throw new Error(`[Failed after ${attempts} retries] ${errorMsg}`);
+        throw new Error(`[${provider.toUpperCase()} failed after ${attempts} retries] ${errorMsg}`);
       }
     }
   }
+  throw new Error(`[${provider.toUpperCase()} failed after ${attempts} retries] Unknown error`);
 }
 
 /**

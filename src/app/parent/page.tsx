@@ -18,6 +18,10 @@ export default async function ParentDashboard() {
   const sessions = await getSessionHistory();
   const rewards = await getRewards();
   const themeClass = user.theme === 'peach' ? 'theme-peach' : 'theme-ocean';
+  const currentYearTopics = topics.filter((topic) => topic.yearGroup === user.yearGroup);
+  const currentDifficulty = currentYearTopics.length > 0
+    ? Math.round(currentYearTopics.reduce((sum, topic) => sum + topic.difficultyLevel, 0) / currentYearTopics.length)
+    : 3;
 
   return (
     <div className={themeClass}>
@@ -60,7 +64,7 @@ export default async function ParentDashboard() {
             </div>
 
             <div className="md:col-span-1">
-              <EditProfileForm user={user} />
+              <EditProfileForm user={user} currentDifficulty={currentDifficulty} />
             </div>
           </div>
         </div>

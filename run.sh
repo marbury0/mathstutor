@@ -26,6 +26,8 @@ if [ ! -f "data/maths_tutor.db" ]; then
   echo -e "${GREEN}✓ Database initialized and seeded.${NC}"
 else
   echo -e "${GREEN}✓ Database file detected.${NC}"
+  echo -e "${YELLOW}Generating Prisma Client...${NC}"
+  npx prisma generate
 fi
 
 # 3. Check for flags

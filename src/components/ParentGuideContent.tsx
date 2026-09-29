@@ -419,6 +419,26 @@ export default function ParentGuideContent({ themeClass, userYearGroup }: Parent
                   </div>
 
                   {/* Point 4 */}
+                  <div className="bg-amber-50/60 p-6 rounded-2xl border border-amber-200 flex gap-4">
+                    <HeartHandshake className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="space-y-2">
+                      <h3 className="font-extrabold text-slate-800 text-lg">When It Feels Like There Is No Effort</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        It is natural to feel frustrated when you have just explained something and your child still does not try. However, what looks like refusal can be a freeze response when the reading, maths, typing, and worry all feel too much at once.
+                      </p>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        Do not explain the whole problem and then expect an immediate independent answer. Read it together, ask what the question wants them to find, model one small step, and then give them 10–15 seconds to try the next step.
+                      </p>
+                      <p className="text-sm text-slate-600 leading-relaxed font-semibold">
+                        <strong>Try saying:</strong> &quot;You may have seen this before, but remembering it on your own is the part we are practising.&quot; If they still cannot begin, stop kindly: &quot;Your brain is stuck today. We will try again another time.&quot;
+                      </p>
+                      <p className="text-sm text-amber-800 leading-relaxed font-semibold">
+                        A calm five-minute success is more valuable than pushing through another 45 minutes. If freezing happens regularly, share the pattern with their teacher or SENCO.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Point 5 */}
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex gap-4">
                     <CheckCircle2 className="w-6 h-6 text-teal-600 shrink-0 mt-0.5" />
                     <div className="space-y-2">

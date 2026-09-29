@@ -17,6 +17,7 @@ interface QuestionDetail {
   questionText: string | null;
   userAnswer: string | null;
   correctAnswer: string | null;
+  supportLevel: string;
   misconception: string | null;
   advice: string | null;
   answeredAt: Date;
@@ -181,6 +182,16 @@ export default function RecentSprints({ sessions }: { sessions: Session[] }) {
                               </span>
                             </>
                           )}
+                        </div>
+
+                        <div className="text-xs font-bold text-slate-600">
+                          Support: {
+                            q.supportLevel === 'independent' ? '✅ Independent' :
+                            q.supportLevel === 'hint' ? '💡 Hint used' :
+                            q.supportLevel === 'parent_help' ? '🤝 Parent helped' :
+                            q.supportLevel === 'parent_answered' ? '👨‍👩‍👧 Parent answered' :
+                            '❔ Not recorded'
+                          }
                         </div>
 
                         {/* Misconception diagnostics */}

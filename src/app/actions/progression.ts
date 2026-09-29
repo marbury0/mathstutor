@@ -15,7 +15,8 @@ export async function logQuestionResult(
   timeTaken: number,
   questionText: string,
   userAnswer: string,
-  correctAnswer: string
+  correctAnswer: string,
+  supportLevel: 'independent' | 'hint' | 'parent_help' | 'parent_answered' | 'unknown' = 'independent'
 ) {
   const user = await getUser();
   if (!user) return;
@@ -45,18 +46,20 @@ export async function logQuestionResult(
   let misconception = null;
   let advice = null;
 
-  // Calculate current streak from history (exclude current answer which isn't in DB yet)
+  const isIndependent = supportLevel === 'independent';
+
+  // Calculate current independent streak from history (exclude current answer which isn't in DB yet)
   const history = topic.questionHistory;
   let consecutiveCorrect = 0;
   for (const record of history) {
-    if (record.isCorrect) {
+    if (record.isCorrect && record.supportLevel === 'independent') {
       consecutiveCorrect++;
     } else {
       break;
     }
   }
 
-  if (isCorrect) {
+  if (isIndependent && isCorrect) {
     newMastery = Math.min(1.0, newMastery + 0.1);
     const daysToAdd = Math.ceil(newMastery * 14);
     nextReview.setDate(nextReview.getDate() + daysToAdd);
@@ -97,7 +100,7 @@ export async function logQuestionResult(
         }
       });
     }
-  } else {
+  } else if (isIndependent) {
     newMastery = Math.max(0.0, newMastery - 0.15);
     nextReview.setDate(nextReview.getDate() + 1);
 
@@ -116,9 +119,11 @@ export async function logQuestionResult(
         const cookieStore = await cookies();
         const headersList = await headers();
         const isTestMode = cookieStore.get('testMode')?.value === 'true' || headersList.get('x-e2e-test') === 'true';
-        const diagnosis = await diagnoseError(questionText, userAnswer, correctAnswer, user.yearGroup, isTestMode);
-        misconception = diagnosis.misconception;
-        advice = diagnosis.advice;
+        if (isTestMode || process.env.NODE_ENV === 'test' || process.env.MOCK_AI === 'true') {
+          const diagnosis = await diagnoseError(questionText, userAnswer, correctAnswer, user.yearGroup, true);
+          misconception = diagnosis.misconception;
+          advice = diagnosis.advice;
+        }
       } catch (e) {
         console.error("Diagnosis failed:", e);
       }
@@ -135,7 +140,7 @@ export async function logQuestionResult(
     masteredAt = null;
   }
 
-  await prisma.topic.update({
+  const updatedTopic = await prisma.topic.update({
     where: { id: topic.id },
     data: {
       masteryLevel: newMastery,
@@ -149,14 +154,49 @@ export async function logQuestionResult(
           questionText,
           userAnswer,
           correctAnswer,
+          supportLevel,
           misconception,
           advice
         },
       },
     },
+    include: {
+      questionHistory: {
+        orderBy: { answeredAt: 'desc' },
+        take: 1,
+      },
+    },
   });
 
-  await recalculateRewardProgress(user.id);
+  // In live mode, run error diagnosis asynchronously in the background so the UI is never blocked
+  if (!isCorrect && !misconception && process.env.NODE_ENV !== 'test' && process.env.MOCK_AI !== 'true') {
+    const historyId = updatedTopic.questionHistory[0]?.id;
+    if (historyId) {
+      diagnoseError(questionText, userAnswer, correctAnswer, user.yearGroup, false)
+        .then(async (diagnosis) => {
+          if (diagnosis && (diagnosis.misconception || diagnosis.advice)) {
+            await prisma.questionHistory.update({
+              where: { id: historyId },
+              data: {
+                misconception: diagnosis.misconception,
+                advice: diagnosis.advice,
+              },
+            });
+          }
+        })
+        .catch((e) => {
+          console.error("Background error diagnosis failed:", e);
+        });
+    }
+  }
+
+  if (process.env.NODE_ENV === 'test') {
+    await recalculateRewardProgress(user.id);
+  } else {
+    recalculateRewardProgress(user.id).catch((e) => {
+      console.error("Background reward recalculation failed:", e);
+    });
+  }
 }
 
 export async function finishSession(score: number, duration: number) {

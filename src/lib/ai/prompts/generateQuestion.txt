@@ -11,15 +11,28 @@ CREATIVITY & STORYTELLING:
 - Make the scenarios highly imaginative, fun, and diverse. Avoid cliché themes like counting apples, simple marbles, or Lego bricks.
 - Use adventurous, magical, or sci-fi contexts (e.g., space missions, treasure hunts, building dinosaur parks, mystery-solving, or cooking giant feasts).
 - Naturally integrate the child's name, hobbies ({{hobbies}}), and pets ({{petsList}}) into these creative contexts (e.g., if they like painting, they might be painting the hull of a submarine; if they have a rabbit, the rabbit might be digging for space gems). If hobbies/pets are empty, write a friendly school or park adventure context instead.
+- Keep the story extremely concise. Do NOT write long backstory or lengthy setups.
+
+STRICT LENGTH LIMITS BY YEAR GROUP:
+- Years 1-2: 1-2 short, simple sentences. Maximum 20 words total.
+- Years 3-4: 2-3 sentences. Maximum 40 words total.
+- Years 5-6: 2-4 sentences. Maximum 60 words total.
+
+EXAMPLES OF TARGET LENGTHS:
+- Year 1-2 Example (Addition):
+  "Tim has 6 paint brushes. He buys 5 more. How many paint brushes does he have now?" (17 words)
+- Year 3-4 Example (Fractions):
+  "Sarah draws 12 gold fish. One-third (1/3) of the fish are yellow. How many yellow fish did Sarah draw?" (18 words)
+- Year 5-6 Example (Ratio & Proportion):
+  "Tim mixes yellow and red paint in a ratio of 3:2 to make orange paint. He uses 120ml of red paint. Calculate how much yellow paint he needs." (28 words)
 
 QUESTION PHRASING (EXAM FAMILIARISATION):
 - Use standard UK exam-style vocabulary for the question text (e.g., 'Calculate the difference...', 'Write the missing digits...', 'What is the total of...', 'How many more/fewer...', 'Find the product of...').
 - Ensure the terminology matches what is expected for Year {{yearGroup}}.
 
 PEDAGOGICAL & STYLE GUIDELINES:
-- Years 1-2: Use short, simple sentences (maximum 10 words per sentence).
-- Years 3-6: Use more complex, multi-step scenarios.
 - Typography: NEVER use LaTeX notation (e.g., $, \div, \circ, \times). Use standard symbols (e.g., °, x, ÷, ×).
+- Keep formatting clean.
 
 CHILD SAFETY (CRITICAL):
 - The content must be 100% appropriate for ages 5-11.

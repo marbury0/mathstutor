@@ -113,6 +113,7 @@ export async function updateUser(data: {
   name: string;
   age: number;
   yearGroup: number;
+  difficultyLevel?: number;
   hobbies?: string[];
   pets?: { name: string; type: string }[];
   tutorName?: string;
@@ -158,6 +159,10 @@ export async function updateUser(data: {
     updateData.sprintDuration = data.sprintDuration;
   }
 
+  const difficultyLevel = data.difficultyLevel === undefined
+    ? undefined
+    : Math.max(1, Math.min(10, Math.round(data.difficultyLevel)));
+
   await prisma.user.update({
     where: { id: user.id },
     data: updateData,
@@ -165,6 +170,20 @@ export async function updateUser(data: {
 
   // Seed new topics for the new year group if they don't exist yet
   await seedTopics(user.id, data.yearGroup, 3);
+
+  // A parent can reset the adaptive difficulty for the selected year group.
+  // Keep this separate from the User record because difficulty is stored per topic.
+  if (difficultyLevel !== undefined) {
+    await prisma.topic.updateMany({
+      where: {
+        userId: user.id,
+        yearGroup: data.yearGroup,
+      },
+      data: {
+        difficultyLevel,
+      },
+    });
+  }
 
   revalidatePath('/');
   revalidatePath('/parent');

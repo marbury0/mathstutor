@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchNextQuestion, fetchHint, fetchAlternativeExplanation } from '@/app/actions/questions';
 import { logQuestionResult, finishSession } from '@/app/actions/progression';
-import { Timer, Pause, Play, LogOut, Trophy, HelpCircle, ArrowRight, RotateCcw, Save, Trash2, CheckCircle2 } from 'lucide-react';
+import { Pause, Play, LogOut, Trophy, HelpCircle, ArrowRight, RotateCcw, Save, Trash2, CheckCircle2 } from 'lucide-react';
 
 interface Question {
   text: string;
@@ -12,6 +12,15 @@ interface Question {
   explanation: string;
   topic: string;
   visualHint: string;
+}
+
+type SupportLevel = 'independent' | 'hint' | 'parent_help' | 'parent_answered';
+
+interface PendingResult {
+  isCorrect: boolean;
+  timeTaken: number;
+  userAnswer: string;
+  correctAnswer: string;
 }
 
 export function normalizeAnswer(ans: string): string {
@@ -73,6 +82,9 @@ export default function Sprint({
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHintLoading, setIsHintLoading] = useState(false);
+  const [isCorrectFeedback, setIsCorrectFeedback] = useState(false);
+  const [pendingResult, setPendingResult] = useState<PendingResult | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [showFullExplanation, setShowFullExplanation] = useState(false);
@@ -100,28 +112,124 @@ export default function Sprint({
   
   const questionStartTime = useRef<number>(0);
   const isFetching = useRef(false);
+  const prefetchedQuestionRef = useRef<Question | null>(null);
+  const prefetchPromiseRef = useRef<Promise<Question | null> | null>(null);
+  const prefetchVersionRef = useRef(0);
 
-  const loadNextQuestion = useCallback(async () => {
-    if (isFetching.current) return;
-    isFetching.current = true;
-    setIsLoading(true);
+  const invalidatePrefetch = useCallback(() => {
+    prefetchVersionRef.current += 1;
+    prefetchedQuestionRef.current = null;
+    prefetchPromiseRef.current = null;
+  }, []);
+
+  const prefetchNextQuestion = useCallback(() => {
+    if (prefetchedQuestionRef.current || prefetchPromiseRef.current) return;
+    const requestVersion = prefetchVersionRef.current;
+    const promise = fetchNextQuestion()
+      .then((q) => {
+        if (requestVersion !== prefetchVersionRef.current) return null;
+        prefetchedQuestionRef.current = q;
+        prefetchPromiseRef.current = null;
+        return q;
+      })
+      .catch((err) => {
+        console.error("Prefetch next question failed:", err);
+        prefetchPromiseRef.current = null;
+        return null;
+      });
+    prefetchPromiseRef.current = promise;
+  }, []);
+
+  const loadNextQuestion = useCallback(async (preferredTopicName?: string, excludedTopicName?: string) => {
     setHint(null);
     setAttempts(0);
     setShowFullExplanation(false);
     setAlternativeExplanation(null);
     setIsExplainingLoading(false);
+    setIsHintLoading(false);
     setUserAnswer('');
+
+    if (preferredTopicName || excludedTopicName) {
+      invalidatePrefetch();
+      if (isFetching.current) return;
+      isFetching.current = true;
+      setIsLoading(true);
+      try {
+        const q = await fetchNextQuestion(preferredTopicName, excludedTopicName);
+        setCurrentQuestion(q);
+        questionStartTime.current = Date.now();
+        prefetchNextQuestion();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+        isFetching.current = false;
+      }
+      return;
+    }
+
+    // 1. If prefetched question is already in memory, display instantly!
+    if (prefetchedQuestionRef.current) {
+      const nextQ = prefetchedQuestionRef.current;
+      prefetchedQuestionRef.current = null;
+      setCurrentQuestion(nextQ);
+      questionStartTime.current = Date.now();
+      setIsLoading(false);
+      prefetchNextQuestion();
+      return;
+    }
+
+    // 2. If a prefetch is in flight, await it
+    if (prefetchPromiseRef.current) {
+      setIsLoading(true);
+      try {
+        const nextQ = await prefetchPromiseRef.current;
+        if (nextQ) {
+          prefetchedQuestionRef.current = null;
+          setCurrentQuestion(nextQ);
+          questionStartTime.current = Date.now();
+          setIsLoading(false);
+          prefetchNextQuestion();
+          return;
+        }
+      } catch (err) {
+        console.error("Error awaiting prefetched question:", err);
+      }
+    }
+
+    // 3. Fallback: on-demand fetch
+    if (isFetching.current) return;
+    isFetching.current = true;
+    setIsLoading(true);
     try {
       const q = await fetchNextQuestion();
       setCurrentQuestion(q);
       questionStartTime.current = Date.now();
+      prefetchNextQuestion();
     } catch (e) {
       console.error(e);
     } finally {
       setIsLoading(false);
       isFetching.current = false;
     }
-  }, []);
+  }, [invalidatePrefetch, prefetchNextQuestion]);
+
+  const practiseSameTopic = async () => {
+    if (currentQuestion) await loadNextQuestion(currentQuestion.topic);
+  };
+
+  const practiseDifferentTopic = async () => {
+    if (currentQuestion) await loadNextQuestion(undefined, currentQuestion.topic);
+  };
+
+  const retryCurrentQuestion = () => {
+    setHint(null);
+    setAttempts(0);
+    setShowFullExplanation(false);
+    setAlternativeExplanation(null);
+    setUserAnswer('');
+    questionStartTime.current = Date.now();
+  };
 
   const handleGetAlternativeExplanation = async () => {
     if (!currentQuestion || isExplainingLoading) return;
@@ -149,6 +257,30 @@ export default function Sprint({
       await loadNextQuestion();
     }
   }, [questionsCompleted, totalQuestions, elapsedTime, loadNextQuestion, userId]);
+
+  const recordSupportAndContinue = async (supportLevel: SupportLevel) => {
+    if (!currentQuestion || !pendingResult) return;
+
+    const result = pendingResult;
+    setPendingResult(null);
+    setIsCorrectFeedback(false);
+
+    logQuestionResult(
+      currentQuestion.topic,
+      result.isCorrect,
+      result.timeTaken,
+      currentQuestion.text,
+      result.userAnswer,
+      result.correctAnswer,
+      supportLevel
+    ).catch((err) => console.error("Error logging question result:", err));
+
+    if (result.isCorrect) {
+      const newScore = score + 1;
+      setScore(newScore);
+      await handleNextQuestion(newScore);
+    }
+  };
 
   const handleExitClick = () => {
     setIsPaused(true);
@@ -187,41 +319,46 @@ export default function Sprint({
   };
 
   useEffect(() => {
-    const storageKey = `maths_tutor_sprint_${userId}`;
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const EXPIRATION_MS = 72 * 60 * 60 * 1000; // 72 hours
-        if (parsed.timestamp && Date.now() - parsed.timestamp > EXPIRATION_MS) {
+    queueMicrotask(() => {
+      const storageKey = `maths_tutor_sprint_${userId}`;
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const EXPIRATION_MS = 72 * 60 * 60 * 1000; // 72 hours
+          if (parsed.timestamp && Date.now() - parsed.timestamp > EXPIRATION_MS) {
+            localStorage.removeItem(storageKey);
+            loadNextQuestion();
+          } else {
+            setElapsedTime(parsed.elapsedTime ?? 0);
+            setQuestionsCompleted(parsed.questionsCompleted ?? 0);
+            setScore(parsed.score ?? 0);
+            setPendingResult(parsed.pendingResult ?? null);
+            setCurrentQuestion(parsed.currentQuestion ?? null);
+            setAttempts(parsed.attempts ?? 0);
+            setHint(parsed.hint ?? null);
+            setShowFullExplanation(parsed.showFullExplanation ?? false);
+            setAlternativeExplanation(parsed.alternativeExplanation ?? null);
+            setIsPaused(parsed.isPaused ?? false);
+            setIsLoading(false);
+            questionStartTime.current = Date.now();
+            if (!parsed.currentQuestion) {
+              loadNextQuestion();
+            } else {
+              prefetchNextQuestion();
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse saved sprint:", e);
           localStorage.removeItem(storageKey);
           loadNextQuestion();
-        } else {
-          setElapsedTime(parsed.elapsedTime ?? 0);
-          setQuestionsCompleted(parsed.questionsCompleted ?? 0);
-          setScore(parsed.score ?? 0);
-          setCurrentQuestion(parsed.currentQuestion ?? null);
-          setAttempts(parsed.attempts ?? 0);
-          setHint(parsed.hint ?? null);
-          setShowFullExplanation(parsed.showFullExplanation ?? false);
-          setAlternativeExplanation(parsed.alternativeExplanation ?? null);
-          setIsPaused(parsed.isPaused ?? false);
-          setIsLoading(false);
-          questionStartTime.current = Date.now();
-          if (!parsed.currentQuestion) {
-            loadNextQuestion();
-          }
         }
-      } catch (e) {
-        console.error("Failed to parse saved sprint:", e);
-        localStorage.removeItem(storageKey);
+      } else {
         loadNextQuestion();
       }
-    } else {
-      loadNextQuestion();
-    }
-    setIsInitialized(true);
-  }, [userId, loadNextQuestion]);
+      setIsInitialized(true);
+    });
+  }, [userId, loadNextQuestion, prefetchNextQuestion]);
 
   useEffect(() => {
     if (!isInitialized || isSessionEnding.current) return;
@@ -231,6 +368,7 @@ export default function Sprint({
       elapsedTime,
       questionsCompleted,
       score,
+      pendingResult,
       currentQuestion,
       attempts,
       hint,
@@ -246,6 +384,7 @@ export default function Sprint({
     elapsedTime,
     questionsCompleted,
     score,
+    pendingResult,
     currentQuestion,
     attempts,
     hint,
@@ -266,9 +405,8 @@ export default function Sprint({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentQuestion || isLoading || isPaused) return;
+    if (!currentQuestion || isLoading || isPaused || isCorrectFeedback || isHintLoading) return;
 
-    setIsLoading(true);
     try {
       const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
       const trimmedUser = userAnswer.trim();
@@ -281,8 +419,8 @@ export default function Sprint({
         const userNumMatch = normalizedUser.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
         const correctNumMatch = normalizedCorrect.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
         if (userNumMatch && correctNumMatch) {
-          const [_, userNum, userUnit] = userNumMatch;
-          const [__, correctNum, correctUnit] = correctNumMatch;
+          const [, userNum, userUnit] = userNumMatch;
+          const [, correctNum, correctUnit] = correctNumMatch;
           return Number(userNum) === Number(correctNum) && (userUnit === correctUnit || userUnit === "" || correctUnit === "");
         }
         return false;
@@ -298,8 +436,8 @@ export default function Sprint({
             const userNumMatch = normalizedUser.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
             const acceptableNumMatch = normalizedAcceptable.match(/^([+-]?\d+(?:\.\d+)?)(.*)$/);
             if (userNumMatch && acceptableNumMatch) {
-              const [_, userNum, userUnit] = userNumMatch;
-              const [__, accNum, accUnit] = acceptableNumMatch;
+              const [, userNum, userUnit] = userNumMatch;
+              const [, accNum, accUnit] = acceptableNumMatch;
               return Number(userNum) === Number(accNum) && (userUnit === accUnit || userUnit === "" || accUnit === "");
             }
             return false;
@@ -309,44 +447,69 @@ export default function Sprint({
       })();
 
       if (normalizedUser === normalizedCorrect || isNumericMatch || isAcceptableMatch) {
-        await logQuestionResult(
-          currentQuestion.topic,
-          true,
+        // Show positive feedback, then ask how much support was needed before recording it.
+        setIsCorrectFeedback(true);
+        setPendingResult({
+          isCorrect: true,
           timeTaken,
-          currentQuestion.text,
-          trimmedUser,
-          trimmedCorrect
-        );
-        setScore(score + 1);
-        await handleNextQuestion(score + 1);
+          userAnswer: trimmedUser,
+          correctAnswer: trimmedCorrect,
+        });
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
         
         if (newAttempts === 1) {
-          const hintText = await fetchHint(currentQuestion.text, trimmedUser, trimmedCorrect);
-          setHint(hintText);
+          setIsHintLoading(true);
+          try {
+            const hintText = await fetchHint(currentQuestion.text, trimmedUser, trimmedCorrect);
+            setHint(hintText);
+          } catch (err) {
+            console.error("Error fetching hint:", err);
+          } finally {
+            setIsHintLoading(false);
+          }
         } else {
-          await logQuestionResult(
-            currentQuestion.topic,
-            false,
+          setPendingResult({
+            isCorrect: false,
             timeTaken,
-            currentQuestion.text,
-            trimmedUser,
-            trimmedCorrect
-          );
+            userAnswer: trimmedUser,
+            correctAnswer: trimmedCorrect,
+          });
+
+          // Show the explanation, but record the support level first.
           setShowFullExplanation(true);
         }
       }
     } catch (err) {
       console.error(err);
-    } finally {
       setIsLoading(false);
     }
   };
 
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;
+
+  const supportPrompt = pendingResult && (
+    <div className="bg-sky-50 border-2 border-sky-200 p-4 rounded-2xl text-left space-y-3">
+      <p className="font-extrabold text-sky-900">How was this question solved?</p>
+      <p className="text-sm text-sky-800 font-medium">This helps us choose the right level. There is no wrong choice.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button type="button" onClick={() => recordSupportAndContinue('independent')} className="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold py-2.5 px-3 rounded-xl cursor-pointer">
+          I did it myself
+        </button>
+        <button type="button" onClick={() => recordSupportAndContinue('hint')} className="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold py-2.5 px-3 rounded-xl cursor-pointer">
+          I needed a hint
+        </button>
+        <button type="button" onClick={() => recordSupportAndContinue('parent_help')} className="bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-2.5 px-3 rounded-xl cursor-pointer">
+          Parent helped
+        </button>
+        <button type="button" onClick={() => recordSupportAndContinue('parent_answered')} className="bg-slate-200 hover:bg-slate-300 text-slate-900 font-bold py-2.5 px-3 rounded-xl cursor-pointer">
+          Parent answered
+        </button>
+      </div>
+    </div>
+  );
 
   if (isFinished) {
     return (
@@ -410,11 +573,11 @@ export default function Sprint({
         </div>
       </div>
 
-      <div className="bg-theme-card text-slate-900 p-12 rounded-3xl shadow-xl border-4 border-primary/40 text-center space-y-8 relative overflow-hidden min-h-[400px] sm:min-h-[450px] flex flex-col justify-center">
+      <div className={`bg-theme-card text-slate-900 p-12 rounded-3xl shadow-xl border-4 ${isCorrectFeedback ? 'border-green-500 ring-4 ring-green-200' : 'border-primary/40'} transition-all text-center space-y-8 relative overflow-hidden min-h-[400px] sm:min-h-[450px] flex flex-col justify-center`}>
         {isLoading && !isPaused && (
-          <div className="absolute inset-0 bg-theme-card/85 flex flex-col items-center justify-center gap-4 z-10">
+          <div className="absolute inset-0 bg-theme-card/85 flex flex-col items-center justify-center gap-4 z-10 animate-in fade-in duration-200">
             <div className="animate-bounce text-5xl">🤔</div>
-            <p className="font-extrabold text-primary animate-pulse text-lg">{tutorName} is generating your personalized challenge...</p>
+            <p className="font-extrabold text-primary animate-pulse text-lg">{tutorName} is preparing your next challenge...</p>
           </div>
         )}
 
@@ -475,7 +638,14 @@ export default function Sprint({
               {currentQuestion.text}
             </h2>
             
-            {hint && !showFullExplanation && (
+            {isHintLoading && !showFullExplanation && (
+              <div className="bg-amber-50 p-4 rounded-xl border-2 border-amber-300 text-amber-950 flex items-center justify-center gap-2 font-semibold animate-pulse">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-amber-600 border-t-transparent"></div>
+                <span>Not quite! {tutorName} is thinking of a hint for you... 💡</span>
+              </div>
+            )}
+
+            {hint && !showFullExplanation && !isHintLoading && (
               <div className="bg-yellow-50 p-4 rounded-xl border-2 border-yellow-300 text-yellow-950 italic font-semibold animate-in fade-in slide-in-from-top-4">
                 💡 {tutorName}&apos;s Hint: {hint}
               </div>
@@ -495,8 +665,10 @@ export default function Sprint({
                     {alternativeExplanation || currentQuestion.explanation}
                   </p>
                 )}
+
+                {supportPrompt}
                 
-                <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                   {!alternativeExplanation && (
                     <button
                       type="button"
@@ -509,8 +681,32 @@ export default function Sprint({
                   )}
                   <button
                     type="button"
+                    onClick={retryCurrentQuestion}
+                    disabled={isLoading || isExplainingLoading || isPaused || Boolean(pendingResult)}
+                    className="bg-emerald-100 hover:bg-emerald-200 disabled:opacity-50 text-emerald-900 font-bold py-3 px-4 rounded-xl text-center cursor-pointer transition-all active:scale-95"
+                  >
+                    Try this one again
+                  </button>
+                  <button
+                    type="button"
+                    onClick={practiseSameTopic}
+                    disabled={isLoading || isExplainingLoading || isPaused || Boolean(pendingResult)}
+                    className="bg-secondary-bg hover:bg-secondary/20 disabled:opacity-50 text-secondary font-bold py-3 px-4 rounded-xl text-center cursor-pointer transition-all active:scale-95"
+                  >
+                    Another like this
+                  </button>
+                  <button
+                    type="button"
+                    onClick={practiseDifferentTopic}
+                    disabled={isLoading || isExplainingLoading || isPaused || Boolean(pendingResult)}
+                    className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-800 font-bold py-3 px-4 rounded-xl text-center cursor-pointer transition-all active:scale-95"
+                  >
+                    Try a different topic
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleNextQuestion(score)}
-                    disabled={isLoading || isExplainingLoading || isPaused}
+                    disabled={isLoading || isExplainingLoading || isPaused || Boolean(pendingResult)}
                     className="flex-1 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer transition-all hover:scale-[1.01] active:scale-95 duration-200 flex items-center justify-center gap-1.5"
                   >
                     Got it! Next question <ArrowRight className="w-5 h-5" />
@@ -521,22 +717,32 @@ export default function Sprint({
 
             {!showFullExplanation && (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {isCorrectFeedback && (
+                  <div className="bg-green-100 border-2 border-green-500 text-green-900 p-3 rounded-2xl flex items-center justify-center gap-2 font-extrabold text-lg animate-in zoom-in-95">
+                    <CheckCircle2 className="w-6 h-6 text-green-600 animate-bounce" /> Correct! Awesome job! 🌟
+                  </div>
+                )}
+                {isCorrectFeedback && supportPrompt}
                 <input
                   type="text"
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  disabled={isLoading || isPaused}
-                  className="w-full p-3 text-xl md:text-2xl text-center border-4 border-primary-bg rounded-2xl focus:border-primary outline-none transition-colors text-slate-900 bg-white disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200"
-                  placeholder={isPaused ? "Sprint is paused. Resume to answer!" : "Type your answer..."}
+                  disabled={isLoading || isPaused || isCorrectFeedback || isHintLoading}
+                  className={`w-full p-3 text-xl md:text-2xl text-center border-4 rounded-2xl focus:border-primary outline-none transition-all text-slate-900 bg-white disabled:bg-slate-50 disabled:text-slate-400 ${isCorrectFeedback ? 'border-green-500 bg-green-50/50 text-green-700 font-extrabold' : 'border-primary-bg'}`}
+                  placeholder={isPaused ? "Sprint is paused. Resume to answer!" : isCorrectFeedback ? "Correct! 🌟" : "Type your answer..."}
                   autoFocus={!isPaused}
                 />
                 <button
                   type="submit"
-                  disabled={isLoading || isPaused}
-                  className="w-full bg-primary hover:bg-primary-hover text-white font-extrabold py-3 rounded-2xl text-xl shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  disabled={isLoading || isPaused || isCorrectFeedback || isHintLoading}
+                  className={`w-full ${isCorrectFeedback ? 'bg-green-600 text-white' : 'bg-primary hover:bg-primary-hover text-white'} font-extrabold py-3 rounded-2xl text-xl shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5`}
                 >
                   {isPaused ? (
                     "Paused ⏸️"
+                  ) : isCorrectFeedback ? (
+                    <span className="flex items-center gap-1.5"><CheckCircle2 className="w-6 h-6" /> Correct!</span>
+                  ) : isHintLoading ? (
+                    "Thinking... 💡"
                   ) : (
                     <>
                       {attempts > 0 ? <RotateCcw className="w-5 h-5 animate-spin-once" /> : null}

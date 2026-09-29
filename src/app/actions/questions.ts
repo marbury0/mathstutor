@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma';
 import { getUser } from './user';
 import { generateQuestion, getAdaptiveHint, getAlternativeExplanation } from '@/lib/ai';
 
-export async function fetchNextQuestion() {
+export async function fetchNextQuestion(preferredTopicName?: string, excludedTopicName?: string) {
   const user = await getUser();
   if (!user) throw new Error("No user found");
 
@@ -66,10 +66,20 @@ export async function fetchNextQuestion() {
     return { topic, priorityScore };
   });
 
-  // 4. Sort by priority score descending and pick from the top 3 to add variety
-  scoredTopics.sort((a, b) => b.priorityScore - a.priorityScore);
-  const topCandidates = scoredTopics.slice(0, 3);
-  const selectedTopic = topCandidates[Math.floor(Math.random() * topCandidates.length)].topic;
+  const preferredTopic = preferredTopicName
+    ? topics.find((topic) => topic.name === preferredTopicName)
+    : undefined;
+
+  let selectedTopic = preferredTopic;
+  if (!selectedTopic) {
+    // Sort by priority score descending and pick from the top 3 to add variety.
+    scoredTopics.sort((a, b) => b.priorityScore - a.priorityScore);
+    const eligibleTopics = excludedTopicName && scoredTopics.length > 1
+      ? scoredTopics.filter(({ topic }) => topic.name !== excludedTopicName)
+      : scoredTopics;
+    const topCandidates = eligibleTopics.slice(0, 3);
+    selectedTopic = topCandidates[Math.floor(Math.random() * topCandidates.length)].topic;
+  }
 
   return await generateQuestion(selectedTopic.name, {
     name: user.name,
