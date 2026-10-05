@@ -325,8 +325,35 @@ export interface WeeklyInsightsData {
 
 export async function generateWeeklyInsights(
   profile: { name: string; age: number; yearGroup: number; tutorName: string },
-  metrics: { questionsCount: number; accuracy: number; pointsEarned: number; studyTime: number },
-  questionsList: { topic: string; isCorrect: boolean; questionText: string; userAnswer: string; correctAnswer: string; misconception: string | null; advice: string | null }[],
+  metrics: {
+    questionsCount: number;
+    accuracy: number;
+    independentQuestions: number;
+    independentCorrectCount: number;
+    independentAccuracy: number | null;
+    assistedQuestions: number;
+    assistedCorrectCount: number;
+    assistedAccuracy: number | null;
+    supportCounts: {
+      independent: number;
+      hint: number;
+      parentHelp: number;
+      parentAnswered: number;
+      unrecorded: number;
+    };
+    pointsEarned: number;
+    studyTime: number;
+  },
+  questionsList: {
+    topic: string;
+    isCorrect: boolean;
+    questionText: string;
+    userAnswer: string;
+    correctAnswer: string;
+    supportLevel: string;
+    misconception: string | null;
+    advice: string | null;
+  }[],
   isTestMode = false
 ): Promise<WeeklyInsightsData> {
   if (isTestMode || process.env.MOCK_AI === "true" || process.env.NODE_ENV === "test") {
@@ -361,6 +388,15 @@ export async function generateWeeklyInsights(
     })
     .join("\n");
 
+  const supportSummaryText = [
+    `- Independent: ${metrics.supportCounts.independent} questions (${metrics.independentCorrectCount} correct${metrics.independentAccuracy === null ? '' : `, ${Math.round(metrics.independentAccuracy)}% accuracy`})`,
+    `- Supported: ${metrics.assistedQuestions} questions (${metrics.assistedCorrectCount} correct${metrics.assistedAccuracy === null ? '' : `, ${Math.round(metrics.assistedAccuracy)}% accuracy`})`,
+    `  - Hint used: ${metrics.supportCounts.hint} questions`,
+    `  - Parent helped: ${metrics.supportCounts.parentHelp} questions`,
+    `  - Parent answered: ${metrics.supportCounts.parentAnswered} questions`,
+    metrics.supportCounts.unrecorded > 0 ? `- Support not recorded: ${metrics.supportCounts.unrecorded} questions` : '',
+  ].filter(Boolean).join("\n");
+
   const prompt = getPrompt("generateWeeklyInsights.txt", {
     name: profile.name,
     age: profile.age,
@@ -371,6 +407,7 @@ export async function generateWeeklyInsights(
     pointsEarned: metrics.pointsEarned,
     studyTime: Math.round(metrics.studyTime / 60),
     topicSummaryText,
+    supportSummaryText,
   });
 
   try {

@@ -15,11 +15,15 @@ WEEKLY METRICS:
 TOPIC & ERROR PERFORMANCE:
 {{topicSummaryText}}
 
+INDEPENDENCE & SUPPORT:
+{{supportSummaryText}}
+
 GUIDELINES:
 1. "aiAnalysis" (Parent-facing): Start by celebrating their accomplishments. Translate any learning gaps, struggles, or misconceptions into clear, friendly, non-jargon terms. If questionsCount is 0, focus on welcoming them back and setting positive goals.
 2. "recsPlan" (Parent-facing): Provide 2-3 concrete, fun, real-world activities to reinforce concepts at home (e.g., supermarket math, baking measurements, geometric shape hunts). If metrics are 0, recommend easy introductory games to build interest.
 3. "encouragement" (Child-facing): A short, enthusiastic, exciting message. Mention "{{tutorName}}" and celebrate their points/effort so parents can read it aloud.
-4. Typography: Do not use LaTeX notation. Use standard text.
+4. When discussing accuracy or progress, distinguish independent answers from answers completed with hints or adult help. Parent-assisted answers are evidence of supported practice, not independent mastery. Do not imply that a parent-answered question demonstrates the child's unaided understanding.
+5. Typography: Do not use LaTeX notation. Use standard text.
 
 OUTPUT SCHEMA:
 Return ONLY a raw JSON object:

@@ -143,6 +143,23 @@ export async function generateWeeklyInsightAction(weekStartStr: string, weekEndS
   const totalCount = questions.length;
   const correctCount = questions.filter(q => q.isCorrect).length;
   const accuracy = (correctCount / totalCount) * 100;
+  const independentQuestions = questions.filter(q => q.supportLevel === 'independent');
+  const assistedQuestions = questions.filter(q => ['hint', 'parent_help', 'parent_answered'].includes(q.supportLevel));
+  const independentCorrectCount = independentQuestions.filter(q => q.isCorrect).length;
+  const assistedCorrectCount = assistedQuestions.filter(q => q.isCorrect).length;
+  const independentAccuracy = independentQuestions.length > 0
+    ? (independentCorrectCount / independentQuestions.length) * 100
+    : null;
+  const assistedAccuracy = assistedQuestions.length > 0
+    ? (assistedCorrectCount / assistedQuestions.length) * 100
+    : null;
+  const supportCounts = {
+    independent: questions.filter(q => q.supportLevel === 'independent').length,
+    hint: questions.filter(q => q.supportLevel === 'hint').length,
+    parentHelp: questions.filter(q => q.supportLevel === 'parent_help').length,
+    parentAnswered: questions.filter(q => q.supportLevel === 'parent_answered').length,
+    unrecorded: questions.filter(q => !['independent', 'hint', 'parent_help', 'parent_answered'].includes(q.supportLevel)).length,
+  };
   const pointsEarned = sessions.reduce((sum, s) => sum + s.score, 0);
   const studyTime = sessions.reduce((sum, s) => sum + s.duration, 0);
 
@@ -153,6 +170,7 @@ export async function generateWeeklyInsightAction(weekStartStr: string, weekEndS
     questionText: q.questionText || "",
     userAnswer: q.userAnswer || "",
     correctAnswer: q.correctAnswer || "",
+    supportLevel: q.supportLevel,
     misconception: q.misconception,
     advice: q.advice,
   }));
@@ -167,6 +185,13 @@ export async function generateWeeklyInsightAction(weekStartStr: string, weekEndS
     {
       questionsCount: totalCount,
       accuracy,
+      independentQuestions: independentQuestions.length,
+      independentCorrectCount,
+      independentAccuracy,
+      assistedQuestions: assistedQuestions.length,
+      assistedCorrectCount,
+      assistedAccuracy,
+      supportCounts,
       pointsEarned,
       studyTime,
     },
@@ -225,4 +250,3 @@ export async function deleteWeeklyInsightAction(weekStartStr: string) {
   revalidatePath('/parent');
   return { success: true };
 }
-
