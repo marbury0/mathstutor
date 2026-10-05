@@ -86,6 +86,6 @@ Applying the 5 core interrogations of the **Skill Creator** framework to the ove
 2. **What inputs vary?**
    - Hobbies, pets, year group, topic, and wrong answers. If these inputs contain special characters or SQL injection strings, they must not break the JSON format. The JSON parsing blocks are wrapped in try/catch fallbacks.
 3. **Are external dependencies declared?**
-   - The module depends on `@google/generative-ai` (`gemini-3.5-flash`). Model updates could affect prompt performance. Regular monitoring is recommended.
+   - The module depends on `@google/generative-ai` (`gemini-3.5-flash-lite`). Model updates could affect prompt performance. Regular monitoring is recommended.
 4. **Is the output format robust?**
    - All JSON-returning prompts (`generateQuestion`, `diagnoseError`, `generateWeeklyInsights`) have been refactored to explicitly forbid conversational text and markdown fences (like ` ```json `), reducing parsing failures.

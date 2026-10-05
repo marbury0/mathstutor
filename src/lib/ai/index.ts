@@ -12,7 +12,7 @@ function getGeminiModel() {
   if (!geminiModel) {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
     geminiModel = genAI.getGenerativeModel({
-      model: process.env.LLM_MODEL || "gemini-2.5-flash",
+      model: process.env.LLM_MODEL || "gemini-3.5-flash-lite",
       safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },

@@ -8,6 +8,8 @@ import RecentSprints from '@/components/RecentSprints';
 import ParentRewardsManager from '@/components/ParentRewardsManager';
 import WeeklyInsights from '@/components/WeeklyInsights';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ParentDashboard() {
   const user = await getUser();
   if (!user) {

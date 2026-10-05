@@ -62,6 +62,8 @@ Create a `.env` file in the root folder:
 ```env
 GEMINI_API_KEY="your-google-gemini-api-key"
 DATABASE_URL="file:./data/maths_tutor.db"
+LLM_PROVIDER="gemini"
+LLM_MODEL="gemini-3.5-flash-lite"
 MOCK_AI=false
 ```
 
@@ -92,4 +94,3 @@ npx playwright test
 
 ## 🌐 Deployment to Google Cloud Platform (GCP)
 For instructions on deploying the Next.js app and persistent SQLite database to GCP (including using GCP's **Always Free Tier** VM), read the [GCP Deployment Guide](file:///home/tim/Documents/Dev/marbury0/maths_tutor/docs/gcp_deployment.md).
-

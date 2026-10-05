@@ -1,13 +1,13 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 const url = process.env.DATABASE_URL || 'file:./data/maths_tutor.db';
 
 const getPrismaInstance = () => {
-  if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
-    return new PrismaClient();
+  if (!url.startsWith('postgres://') && !url.startsWith('postgresql://')) {
+    throw new Error('DATABASE_URL must be a PostgreSQL connection string');
   }
-  const adapter = new PrismaBetterSqlite3({ url });
+  const adapter = new PrismaPg({ connectionString: url });
   return new PrismaClient({ adapter });
 };
 

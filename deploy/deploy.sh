@@ -76,7 +76,7 @@ gcloud run deploy maths-tutor \
   --region "$GCP_REGION" \
   --no-allow-unauthenticated \
   --iap \
-  --set-env-vars="DATABASE_URL=${DATABASE_URL},GEMINI_API_KEY=${GEMINI_API_KEY},MOCK_AI=false"
+  --set-env-vars="DATABASE_URL=${DATABASE_URL},GEMINI_API_KEY=${GEMINI_API_KEY},LLM_PROVIDER=gemini,LLM_MODEL=gemini-3.5-flash-lite,MOCK_AI=false"
 
 echo -e "\n=================================================="
 echo "🔒 Securing access via Identity-Aware Proxy (IAP)..."

@@ -44,7 +44,7 @@
   --color-theme-card: var(--theme-card-bg);
   --color-theme-title: var(--theme-text-title);
   --color-text-highlight: var(--theme-text-highlight);
-  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -11,7 +11,7 @@ Small fixes, UI polish, and technical "snags" that need immediate attention.
 ## Technical Refinement
 - [x] **Single User Assumption**: Code currently uses `prisma.user.findFirst()`. This will break if a second person uses the app. Needs to be tied to a session/ID.
 - [x] **Validator Hardening**: The `validateMath` function looks for "YES" in a string. It should be hardened to handle "Yes.", "YES!", or "yes".
-- [x] **AI Version Consistency**: Standardize on one model version (e.g., `gemini-2.0-flash`) across all functions in `ai.ts`.
+- [x] **AI Version Consistency**: Standardize on one model version (e.g., `gemini-3.5-flash-lite`) across all functions in `ai.ts`.
 - [x] **Empty State**: What happens if the `Topic` table is empty? (Currently `fetchNextQuestion` might fail or return undefined).
 
 ## Bug Fixes

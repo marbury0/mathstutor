@@ -1,6 +1,9 @@
 # Stage 1: Install dependencies
 FROM node:20-slim AS deps
 WORKDIR /app
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -27,6 +30,9 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Prompt templates are loaded at runtime by promptLoader.ts and are not
+# included automatically in the Next.js standalone output.
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/ai/prompts ./src/lib/ai/prompts
 
 USER nextjs
 

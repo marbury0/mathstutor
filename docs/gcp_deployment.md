@@ -78,7 +78,7 @@ gcloud run deploy maths-tutor \
   --region us-central1 \
   --no-allow-unauthenticated \
   --iap \
-  --set-env-vars="DATABASE_URL=your-postgresql-url,GEMINI_API_KEY=your-gemini-key,MOCK_AI=false"
+  --set-env-vars="DATABASE_URL=your-postgresql-url,GEMINI_API_KEY=your-gemini-key,LLM_PROVIDER=gemini,LLM_MODEL=gemini-3.5-flash-lite,MOCK_AI=false"
 ```
 *Note: The `--no-allow-unauthenticated` flag locks down the URL, while `--iap` activates the Google account login screen.*
 

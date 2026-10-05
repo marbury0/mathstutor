@@ -1,12 +1,5 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
 import "./globals.css";
-
-const nunito = Nunito({
-  variable: "--font-nunito",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
 
 export const metadata: Metadata = {
   title: "Magic Maths Tutor",
@@ -21,7 +14,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-GB"
-      className={`${nunito.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <body className="min-h-full flex flex-col font-sans">
         {children}
