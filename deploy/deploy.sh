@@ -66,6 +66,25 @@ DATABASE_URL="$DATABASE_URL" npx prisma db push
 echo "Seeding default curriculum topics..."
 DATABASE_URL="$DATABASE_URL" npx prisma db seed
 
+# Ensure database URL enforces TLS
+if [[ "$DATABASE_URL" == *"postgresql://"* && "$DATABASE_URL" != *"sslmode="* ]]; then
+  if [[ "$DATABASE_URL" == *"?"* ]]; then
+    DATABASE_URL="${DATABASE_URL}&sslmode=require"
+  else
+    DATABASE_URL="${DATABASE_URL}?sslmode=require"
+  fi
+  echo "Enforced TLS on database URL: sslmode=require"
+fi
+
+# Ensure dedicated unprivileged service account exists for least-privilege runtime
+SERVICE_ACCOUNT_NAME="maths-tutor-sa"
+SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+if ! gcloud iam service-accounts describe "$SERVICE_ACCOUNT_EMAIL" &> /dev/null; then
+  echo "Creating dedicated least-privilege service account ($SERVICE_ACCOUNT_NAME)..."
+  gcloud iam service-accounts create "$SERVICE_ACCOUNT_NAME" \
+    --display-name="Maths Tutor Cloud Run Service Account"
+fi
+
 echo -e "\n=================================================="
 echo "📦 Deploying Maths Tutor to Google Cloud Run..."
 echo "=================================================="
@@ -76,6 +95,7 @@ gcloud run deploy maths-tutor \
   --region "$GCP_REGION" \
   --no-allow-unauthenticated \
   --iap \
+  --service-account "$SERVICE_ACCOUNT_EMAIL" \
   --set-env-vars="DATABASE_URL=${DATABASE_URL},GEMINI_API_KEY=${GEMINI_API_KEY},LLM_PROVIDER=gemini,LLM_MODEL=gemini-3.5-flash-lite,MOCK_AI=false"
 
 echo -e "\n=================================================="

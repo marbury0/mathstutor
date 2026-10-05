@@ -51,7 +51,8 @@ export async function createUser(data: {
       path: '/',
       maxAge: 30 * 24 * 60 * 60, // 30 days
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production'
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true
     });
   } catch (error) {
     console.error('Prisma error in createUser:', error);
@@ -91,14 +92,20 @@ export async function switchUser(userId: string) {
     path: '/',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production'
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true
   });
   revalidatePath('/');
 }
 
 export async function startNewProfileOnboarding() {
   const cookieStore = await cookies();
-  cookieStore.set('userId', 'new', { path: '/' });
+  cookieStore.set('userId', 'new', { 
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true
+  });
   revalidatePath('/');
 }
 

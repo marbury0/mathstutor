@@ -104,10 +104,14 @@ Enter:
 The deployment script sets:
 
 ```env
+DATABASE_URL=postgresql://.../?sslmode=require
 LLM_PROVIDER=gemini
 LLM_MODEL=gemini-3.5-flash-lite
 MOCK_AI=false
 ```
+
+And deploys under the dedicated unprivileged service account:
+`maths-tutor-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com` (0 project roles).
 
 ## 8. Verify the deployment
 

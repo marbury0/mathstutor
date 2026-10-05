@@ -80,6 +80,13 @@ export async function deleteReward(rewardId: string) {
   const user = await getUser();
   if (!user) throw new Error("No user logged in");
 
+  const reward = await prisma.reward.findUnique({
+    where: { id: rewardId }
+  });
+  if (!reward || reward.userId !== user.id) {
+    throw new Error("Reward not found or access denied");
+  }
+
   await prisma.reward.delete({
     where: { id: rewardId }
   });
@@ -91,6 +98,13 @@ export async function deleteReward(rewardId: string) {
 export async function claimReward(rewardId: string) {
   const user = await getUser();
   if (!user) throw new Error("No user logged in");
+
+  const reward = await prisma.reward.findUnique({
+    where: { id: rewardId }
+  });
+  if (!reward || reward.userId !== user.id) {
+    throw new Error("Reward not found or access denied");
+  }
 
   await prisma.reward.update({
     where: { id: rewardId },
@@ -104,6 +118,13 @@ export async function claimReward(rewardId: string) {
 export async function requestTaskApproval(rewardId: string) {
   const user = await getUser();
   if (!user) throw new Error("No user logged in");
+
+  const reward = await prisma.reward.findUnique({
+    where: { id: rewardId }
+  });
+  if (!reward || reward.userId !== user.id) {
+    throw new Error("Reward not found or access denied");
+  }
 
   await prisma.reward.update({
     where: { id: rewardId },
@@ -122,7 +143,9 @@ export async function approveTaskProgress(rewardId: string) {
     where: { id: rewardId }
   });
 
-  if (!reward) throw new Error("Reward not found");
+  if (!reward || reward.userId !== user.id) {
+    throw new Error("Reward not found or access denied");
+  }
 
   const newVal = Math.min(reward.targetValue, reward.currentValue + 1);
   const isUnlockedNow = newVal >= reward.targetValue;
@@ -150,6 +173,13 @@ export async function approveTaskProgress(rewardId: string) {
 export async function rejectTaskApproval(rewardId: string) {
   const user = await getUser();
   if (!user) throw new Error("No user logged in");
+
+  const reward = await prisma.reward.findUnique({
+    where: { id: rewardId }
+  });
+  if (!reward || reward.userId !== user.id) {
+    throw new Error("Reward not found or access denied");
+  }
 
   await prisma.reward.update({
     where: { id: rewardId },
