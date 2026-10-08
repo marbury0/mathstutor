@@ -66,7 +66,7 @@ DATABASE_URL="$DATABASE_URL" npx prisma db push
 echo "Seeding default curriculum topics..."
 DATABASE_URL="$DATABASE_URL" npx prisma db seed
 
-# Ensure database URL enforces TLS
+# Ensure database URL enforces TLS and libpq compatibility for pg/Supabase
 if [[ "$DATABASE_URL" == *"postgresql://"* && "$DATABASE_URL" != *"sslmode="* ]]; then
   if [[ "$DATABASE_URL" == *"?"* ]]; then
     DATABASE_URL="${DATABASE_URL}&sslmode=require"
@@ -74,6 +74,15 @@ if [[ "$DATABASE_URL" == *"postgresql://"* && "$DATABASE_URL" != *"sslmode="* ]]
     DATABASE_URL="${DATABASE_URL}?sslmode=require"
   fi
   echo "Enforced TLS on database URL: sslmode=require"
+fi
+
+if [[ "$DATABASE_URL" == *"postgresql://"* && "$DATABASE_URL" != *"uselibpqcompat="* ]]; then
+  if [[ "$DATABASE_URL" == *"?"* ]]; then
+    DATABASE_URL="${DATABASE_URL}&uselibpqcompat=true"
+  else
+    DATABASE_URL="${DATABASE_URL}?uselibpqcompat=true"
+  fi
+  echo "Enforced libpq compatibility on database URL: uselibpqcompat=true"
 fi
 
 # Ensure dedicated unprivileged service account exists for least-privilege runtime
